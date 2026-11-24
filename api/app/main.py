@@ -9,7 +9,7 @@ from api.app.services.ledger_service import init_db_triggers
 # Import routers
 from api.app.routers import (
     auth, masters, purchases, production, stock,
-    orders, billing, dispatch, reports, intelligence, benchmark
+    orders, billing, dispatch, reports, intelligence, benchmark, payments
 )
 
 @asynccontextmanager
@@ -51,6 +51,7 @@ app.include_router(dispatch.router)
 app.include_router(reports.router)
 app.include_router(intelligence.router)
 app.include_router(benchmark.router)
+app.include_router(payments.router)
 
 @app.get("/")
 def root():

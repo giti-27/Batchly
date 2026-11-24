@@ -32,3 +32,9 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_user)):
     return current_user
+
+@router.get("/users")
+def list_users(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    users = db.query(User).all()
+    return [{"id": u.id, "username": u.username, "role": u.role, "active": u.is_active} for u in users]
+
