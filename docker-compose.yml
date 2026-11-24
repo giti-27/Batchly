@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: batchly_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: batchly_user
+      POSTGRES_PASSWORD: batchly_pass
+      POSTGRES_DB: batchly
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U batchly_user -d batchly"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: batchly_api
+    restart: always
+    environment:
+      DATABASE_URL: postgresql+psycopg2://batchly_user:batchly_pass@db:5432/batchly
+      APP_ENV: production
+      SECRET_KEY: batchly-super-secret-production-grade-key-2026-invariants
+      DEV_AUTH_BYPASS: "true"
+      FIREBASE_PROJECT_ID: limitless-c72be
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "python api/seed/seed_benchmark.py --reset --run && uvicorn api.app.main:app --host 0.0.0.0 --port 8000"
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: batchly_web
+    restart: always
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:

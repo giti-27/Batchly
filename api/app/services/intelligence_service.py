@@ -423,13 +423,14 @@ def simulate_what_if(
     
     # Calculate simulated material cost
     sim_material_cost_paise = Decimal("0.000000")
-    for bline in bom.lines:
-        item = db.query(Item).filter(Item.id == bline.item_id).first()
-        base_rate = item.moving_avg_cost_paise or Decimal("0.000000")
-        sim_rate = base_rate * (Decimal("1.00") + (input_price_pct_change / Decimal("100")))
-        sim_material_cost_paise += (bline.qty_per_batch * sim_rate)
+    if bom and bom.lines:
+        for bline in bom.lines:
+            item = db.query(Item).filter(Item.id == bline.item_id).first()
+            base_rate = item.moving_avg_cost_paise or Decimal("0.000000")
+            sim_rate = base_rate * (Decimal("1.00") + (input_price_pct_change / Decimal("100")))
+            sim_material_cost_paise += (bline.qty_per_batch * sim_rate)
 
-    sim_yield = yield_override if yield_override else bom.expected_yield_packets
+    sim_yield = yield_override if yield_override else (bom.expected_yield_packets if bom else 200)
     sim_overhead = overhead_per_run_paise if overhead_per_run_paise > 0 else 180000  # ₹1,800 default
     sim_total_cost = sim_material_cost_paise + Decimal(sim_overhead)
     sim_cost_per_packet_paise = int(round(sim_total_cost / Decimal(sim_yield)))
