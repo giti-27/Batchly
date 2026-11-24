@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-sage: #BFCFC1;
+    --color-gold: #E7CA65;
+    --color-mauve: #887984;
+    --color-violet: #8050ED;
+    --color-charcoal: #39333B;
+    --color-deep-black: #080808;
+    --color-off-white: #F5F4EF;
+  }
+
+  body {
+    background-color: #080808;
+    color: #F5F4EF;
+    font-family: 'Fauna One', serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Cinzel', serif;
+  }
+}
+
+.glass-panel {
+  background: rgba(25, 23, 28, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(136, 121, 132, 0.2);
+  border-radius: 1rem;
+}
+
+.glass-panel-glow {
+  background: rgba(25, 23, 28, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(128, 80, 237, 0.35);
+  box-shadow: 0 0 25px rgba(128, 80, 237, 0.15);
+  border-radius: 1rem;
+}
+
+.gold-glow {
+  box-shadow: 0 0 20px rgba(231, 202, 101, 0.25);
+}
