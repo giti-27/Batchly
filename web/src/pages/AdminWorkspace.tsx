@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { apiFetch } from "../lib/api";
+import { apiFetch, getApiBase } from "../lib/api";
 import { Navbar } from "../components/Navbar";
 import {
   Inbox, FileText, Truck, Package, Check, X, Pause, Sparkles,
@@ -554,7 +554,7 @@ export const AdminWorkspace: React.FC = () => {
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${statusColor(inv.status)}`}>{inv.status}</span>
                         </td>
                         <td className="px-4 py-3 text-right space-x-1.5">
-                          <button onClick={e => { e.stopPropagation(); window.open(`http://localhost:8000/invoices/${inv.id}/pdf`, "_blank"); }}
+                          <button onClick={e => { e.stopPropagation(); window.open(`${getApiBase()}/invoices/${inv.id}/pdf`, "_blank"); }}
                             className="px-2.5 py-1 rounded bg-charcoal hover:bg-charcoal/80 text-offWhite text-[10px] border border-charcoal/80">
                             PDF
                           </button>
@@ -859,7 +859,7 @@ export const AdminWorkspace: React.FC = () => {
                 <div key={r.title} className="glass-panel p-5 flex flex-col gap-3">
                   <div className="flex items-center gap-2 text-violet">{r.icon}<h3 className="font-heading font-bold text-offWhite">{r.title}</h3></div>
                   <p className="text-xs text-mauve">{r.desc}</p>
-                  <a href={`http://localhost:8000${r.url}`} target="_blank" rel="noreferrer"
+                  <a href={`${getApiBase()}${r.url}`} target="_blank" rel="noreferrer"
                     className="mt-auto flex items-center gap-1.5 px-4 py-2 rounded-lg bg-charcoal hover:bg-charcoal/80 border border-charcoal/60 text-offWhite text-xs font-semibold transition">
                     <Download className="w-3.5 h-3.5 text-gold" /> Download / View
                   </a>

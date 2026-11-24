@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { apiFetch } from "../lib/api";
+import { apiFetch, getApiBase } from "../lib/api";
 import { Navbar } from "../components/Navbar";
 import {
   FileText, ShieldCheck, Download, Search, AlertOctagon,
@@ -83,7 +83,7 @@ export const AuditorWorkspace: React.FC = () => {
   };
 
   const downloadCSV = (endpoint: string, filename: string) => {
-    window.open(`http://localhost:8000/reports/${endpoint}?format=csv`, "_blank");
+    window.open(`${getApiBase()}/reports/${endpoint}?format=csv`, "_blank");
   };
 
   return (

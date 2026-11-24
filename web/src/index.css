@@ -1,18 +1,26 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-sage: #BFCFC1;
+  --color-gold: #E7CA65;
+  --color-mauve: #887984;
+  --color-violet: #8050ED;
+  --color-charcoal: #39333B;
+  --color-deep-black: #080808;
+  --color-deepBlack: #080808;
+  --color-off-white: #F5F4EF;
+  --color-offWhite: #F5F4EF;
+
+  --font-heading: 'Cinzel', serif;
+  --font-body: 'Fauna One', serif;
+
+  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --shadow-glow: 0 0 25px rgba(128, 80, 237, 0.35);
+  --shadow-goldGlow: 0 0 20px rgba(231, 202, 101, 0.3);
+  --shadow-gold-glow: 0 0 20px rgba(231, 202, 101, 0.3);
+}
 
 @layer base {
-  :root {
-    --color-sage: #BFCFC1;
-    --color-gold: #E7CA65;
-    --color-mauve: #887984;
-    --color-violet: #8050ED;
-    --color-charcoal: #39333B;
-    --color-deep-black: #080808;
-    --color-off-white: #F5F4EF;
-  }
-
   body {
     background-color: #080808;
     color: #F5F4EF;
@@ -21,6 +29,11 @@
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Cinzel', serif;
+  }
+
+  /* Style inputs and buttons cleanly */
+  input, select, textarea {
+    font-family: 'Fauna One', serif;
   }
 }
 
