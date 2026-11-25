@@ -1,7 +1,8 @@
+
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { clearAuth, getCurrentUserRole } from "../lib/api";
-import { ShieldCheck, LogOut, Cpu, Compass, Lock } from "lucide-react";
+import { LogOut, Cpu, Lock } from "lucide-react";
 
 export const Navbar: React.FC = () => {
   const navigate = useNavigate();
@@ -19,9 +20,12 @@ export const Navbar: React.FC = () => {
         <Link to="/" className="flex items-center space-x-3 group">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet to-gold flex items-center justify-center p-[2px] shadow-glow">
             <div className="w-full h-full bg-deepBlack rounded-[10px] flex items-center justify-center">
-              <span className="font-heading font-black text-xl text-gold tracking-widest">B</span>
+              <span className="font-heading font-black text-xl text-gold tracking-widest">
+                B
+              </span>
             </div>
           </div>
+
           <div>
             <h1 className="font-heading font-bold text-lg tracking-wider text-offWhite flex items-center gap-2">
               BATCHLY
@@ -29,7 +33,9 @@ export const Navbar: React.FC = () => {
                 PROD OPS
               </span>
             </h1>
-            <p className="text-[11px] text-mauve font-body">From Salesman's Order to Auditor's Report</p>
+            <p className="text-[11px] text-mauve font-body">
+              From Salesman's Order to Auditor's Report
+            </p>
           </div>
         </Link>
 
@@ -42,20 +48,27 @@ export const Navbar: React.FC = () => {
       </div>
 
       <div className="flex items-center space-x-4">
-        <Link
-          to="/benchmark"
-          className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-gold/15 text-gold border border-gold/40 hover:bg-gold/25 transition text-xs font-medium"
-        >
-          <Cpu className="w-4 h-4" />
-          <span className="hidden sm:inline">Benchmark Hub</span>
-        </Link>
+        {role === "ADMIN" && (
+          <Link
+            to="/benchmark"
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-gold/15 text-gold border border-gold/40 hover:bg-gold/25 transition text-xs font-medium"
+          >
+            <Cpu className="w-4 h-4" />
+            <span className="hidden sm:inline">Benchmark Hub</span>
+          </Link>
+        )}
 
         {role && (
           <div className="flex items-center space-x-3 border-l border-charcoal pl-4">
             <div className="text-right">
-              <div className="text-xs font-semibold text-offWhite">{username}</div>
-              <div className="text-[10px] text-violet uppercase tracking-wider">{role}</div>
+              <div className="text-xs font-semibold text-offWhite">
+                {username}
+              </div>
+              <div className="text-[10px] text-violet uppercase tracking-wider">
+                {role}
+              </div>
             </div>
+
             <button
               onClick={handleLogout}
               className="p-1.5 rounded-lg hover:bg-charcoal text-mauve hover:text-offWhite transition"

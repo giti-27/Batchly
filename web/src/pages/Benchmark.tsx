@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { apiFetch } from "../lib/api";
 import { Navbar } from "../components/Navbar";
 import { CheckCircle2, XCircle, RotateCcw, Play, RefreshCw, Layers, ShieldCheck, AlertTriangle } from "lucide-react";
@@ -56,11 +56,6 @@ export const Benchmark: React.FC = () => {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    runBenchmark();
-  }, []);
-
   return (
     <div className="min-h-screen bg-deepBlack text-offWhite flex flex-col">
       <Navbar />

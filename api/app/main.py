@@ -1,38 +1,79 @@
-import os
+﻿
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+
 from api.app.config import settings
 from api.app.db import engine, Base, SessionLocal
 from api.app.services.ledger_service import init_db_triggers
 
 # Import routers
 from api.app.routers import (
-    auth, masters, purchases, production, stock,
-    orders, billing, dispatch, reports, intelligence, benchmark, payments
+    auth,
+    masters,
+    purchases,
+    production,
+    stock,
+    orders,
+    billing,
+    dispatch,
+    reports,
+    intelligence,
+    benchmark,
+    payments,
 )
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Ensure tables & DB triggers are created
+    # Create database tables and initialize ledger triggers.
     Base.metadata.create_all(bind=engine)
+
     db = SessionLocal()
     try:
         init_db_triggers(db)
     finally:
         db.close()
+
     yield
+
 
 app = FastAPI(
     title="BATCHLY API",
     description="Intelligent Order-to-Audit Manufacturing Operations Platform API",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
+
+# Vercel forwards /api/... to this service without removing /api.
+# Strip that prefix so the existing FastAPI routers continue to work.
+@app.middleware("http")
+async def normalize_api_prefix(request: Request, call_next):
+    original_path = request.scope.get("path", "")
+    new_path = original_path
+
+    if original_path == "/api":
+        new_path = "/"
+    elif original_path.startswith("/api/"):
+        new_path = original_path[4:]
+
+    if new_path != original_path:
+        request.scope["path"] = new_path
+        request.scope["raw_path"] = new_path.encode("utf-8")
+
+    return await call_next(request)
+
+
 # CORS configuration
-allowed_origins = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
-if settings.FRONTEND_URL not in allowed_origins:
+allowed_origins = [
+    origin.strip()
+    for origin in settings.CORS_ORIGINS.split(",")
+    if origin.strip()
+]
+
+if settings.FRONTEND_URL and settings.FRONTEND_URL not in allowed_origins:
     allowed_origins.append(settings.FRONTEND_URL)
 
 app.add_middleware(
@@ -43,6 +84,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Mount routers
 app.include_router(auth.router)
@@ -58,14 +100,16 @@ app.include_router(intelligence.router)
 app.include_router(benchmark.router)
 app.include_router(payments.router)
 
+
 @app.get("/")
 def root():
     return {
         "name": "BATCHLY API",
         "tagline": "From Salesman's Order to Auditor's Report",
         "version": "1.0.0",
-        "status": "ONLINE"
+        "status": "ONLINE",
     }
+
 
 @app.get("/health")
 def health():

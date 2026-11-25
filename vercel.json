@@ -3,13 +3,19 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "services": {
     "api": {
-      "root": "api",
+      "root": ".",
       "framework": "fastapi",
-      "entrypoint": "app.main:app"
+      "entrypoint": "api.app.main:app"
     },
     "web": {
       "root": "web",
-      "framework": "vite"
+      "framework": "vite",
+      "rewrites": [
+        {
+          "source": "/(.*)",
+          "destination": "/index.html"
+        }
+      ]
     }
   },
   "rewrites": [
