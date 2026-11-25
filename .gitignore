@@ -26,3 +26,7 @@ Thumbs.db
 # Env
 .env
 .env.local
+
+batchly.db
+batchly.db-shm
+batchly.db-wal
