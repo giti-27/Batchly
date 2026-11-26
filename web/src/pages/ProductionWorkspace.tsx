@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { apiFetch } from "../lib/api";
 import { Navbar } from "../components/Navbar";
 import {
@@ -22,6 +22,8 @@ export const ProductionWorkspace: React.FC = () => {
   const [labourPaise, setLabourPaise] = useState("120000"); // ₹1,200
   const [powerPaise, setPowerPaise] = useState("60000");   // ₹600
   const [loading, setLoading] = useState(false);
+  const [creatingRun, setCreatingRun] = useState(false);
+  const creatingRunRef = useRef(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [reversalReason, setReversalReason] = useState("");
   const [reversingRunId, setReversingRunId] = useState<number | null>(null);
@@ -64,7 +66,9 @@ export const ProductionWorkspace: React.FC = () => {
   };
 
   const handleCreateRun = async () => {
-    if (!selectedProductId) return;
+    if (!selectedProductId || creatingRunRef.current) return;
+    creatingRunRef.current = true;
+    setCreatingRun(true);
     setLoading(true);
     try {
       const run = await apiFetch("/runs", {
@@ -81,6 +85,8 @@ export const ProductionWorkspace: React.FC = () => {
     } catch (err: any) {
       alert(err.message);
     } finally {
+      creatingRunRef.current = false;
+      setCreatingRun(false);
       setLoading(false);
     }
   };
@@ -369,11 +375,12 @@ export const ProductionWorkspace: React.FC = () => {
 
                 <button
                   onClick={handleCreateRun}
-                  disabled={loading}
-                  className="w-full py-4 rounded-xl bg-gradient-to-r from-violet to-violet/80 hover:from-violet/90 text-white font-heading font-semibold text-sm tracking-wider flex items-center justify-center space-x-2 shadow-glow"
+                  disabled={loading || creatingRun}
+                  aria-busy={creatingRun}
+                  className="w-full py-4 rounded-xl bg-gradient-to-r from-violet to-violet/80 hover:from-violet/90 text-white font-heading font-semibold text-sm tracking-wider flex items-center justify-center space-x-2 shadow-glow disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <Plus className="w-5 h-5" />
-                  <span>Create Planned Run</span>
+                  {creatingRun ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
+                  <span>{creatingRun ? "Creating Run..." : "Create Planned Run"}</span>
                 </button>
               </div>
 
