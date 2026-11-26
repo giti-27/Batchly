@@ -1,6 +1,8 @@
+import os
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from api.app.db import get_db
+from api.app.config import settings
 from api.app.models.entities import User
 from api.app.services.auth_service import require_role
 from api.seed.seed_benchmark import seed_benchmark, execute_benchmark_steps
@@ -14,6 +16,13 @@ router = APIRouter(prefix="/benchmark", tags=["Benchmark"])
 
 @router.post("/reset")
 def reset_benchmark_endpoint(user: User = Depends(require_role(["ADMIN"]))):
+    # seed_benchmark(reset=True) drops EVERY application table. Keep this
+    # destructive helper local-only; never expose it on the hosted deployment.
+    if os.getenv("VERCEL") == "1" or not settings.DATABASE_URL.lower().startswith("sqlite"):
+        raise HTTPException(
+            status_code=403,
+            detail="Benchmark reset is disabled on hosted/shared databases. Use a disposable local SQLite database only."
+        )
     try:
         seed_benchmark(reset=True, execute_steps=False)
         return {"status": "SUCCESS", "message": "Benchmark database reset and re-seeded with opening stock."}
