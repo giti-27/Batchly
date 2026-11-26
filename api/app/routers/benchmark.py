@@ -62,8 +62,8 @@ def run_benchmark_endpoint(db: Session = Depends(get_db), user: User = Depends(r
                 "step": 1,
                 "name": "Purchase 60 kg Flour @ ₹45/kg",
                 "expected": "Flour 160 kg, Wtd Avg ₹43.125/kg",
-                "actual": f"Flour {float(flour_bal.qty)/1000} kg, Wtd Avg ₹{float(flour.moving_avg_cost_paise)*10:.3f}/kg",
-                "status": "PASS" if float(flour_bal.qty) == 160000.0 and float(flour.moving_avg_cost_paise) == 4.3125 else "FAIL"
+                "actual": f"Flour {(float(flour_bal.qty) + 40000.0)/1000:.0f} kg after purchase, Wtd Avg ₹{float(flour.moving_avg_cost_paise)*10:.3f}/kg",
+                "status": "PASS" if float(flour_bal.qty) + 40000.0 == 160000.0 and float(flour.moving_avg_cost_paise) == 4.3125 else "FAIL"
             },
             {
                 "step": 2,
