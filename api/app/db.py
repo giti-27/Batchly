@@ -8,13 +8,24 @@ from api.app.config import settings
 DATABASE_URL = settings.DATABASE_URL
 
 # Support older PostgreSQL URL formats.
-if DATABASE_URL.startswith("postgres://"):
+if DATABASE_URL.startswith("postgresql+psycopg://"):
     DATABASE_URL = DATABASE_URL.replace(
-        "postgres://",
-        "postgresql://",
+        "postgresql+psycopg://",
+        "postgresql+psycopg2://",
         1,
     )
-
+elif DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace(
+        "postgres://",
+        "postgresql+psycopg2://",
+        1,
+    )
+elif DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace(
+        "postgresql://",
+        "postgresql+psycopg2://",
+        1,
+    )
 
 connect_args = {}
 
