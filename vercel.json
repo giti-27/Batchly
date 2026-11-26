@@ -5,17 +5,7 @@
     "api": {
       "root": ".",
       "framework": "fastapi",
-      "entrypoint": "api.app.main:app",
-      "excludeFiles": [
-        "web/**",
-        "docs/**",
-        ".github/**",
-        "api/tests/**",
-        "api/seed/**",
-        ".pytest_cache/**",
-        "**/__pycache__/**",
-        "**/*.pyc"
-      ]
+      "entrypoint": "api.app.main:app"
     },
     "web": {
       "root": "web",
