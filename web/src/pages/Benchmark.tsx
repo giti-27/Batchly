@@ -33,10 +33,9 @@ export const Benchmark: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      await apiFetch("/benchmark/reset", { method: "POST" });
       const res = await apiFetch<BenchmarkResponse>("/benchmark/run", { method: "POST" });
       setData(res);
-      setMessage("Benchmark reset and replayed successfully. Results below are from this run.");
+      setMessage("Benchmark execution completed. Run once against a freshly seeded benchmark database.");
     } catch (err: any) {
       setError(err.message || "Failed to execute benchmark");
     } finally {
@@ -44,18 +43,8 @@ export const Benchmark: React.FC = () => {
     }
   };
 
-  const resetBenchmark = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await apiFetch("/benchmark/reset", { method: "POST" });
-      setData(null);
-      setMessage(res.message || "Benchmark reset to opening stock. Select Run Benchmark to execute the scenario.");
-      setLoading(false);
-    } catch (err: any) {
-      setError(err.message || "Failed to reset benchmark");
-      setLoading(false);
-    }
+  const resetBenchmark = () => {
+    setError("Hosted reset is disabled because the reset endpoint drops every application table. Reseed only a disposable local database.");
   };
   return (
     <div className="min-h-screen bg-deepBlack text-offWhite flex flex-col">
@@ -88,11 +77,12 @@ export const Benchmark: React.FC = () => {
           <div className="flex items-center space-x-3">
             <button
               onClick={resetBenchmark}
-              disabled={loading}
+              disabled={true}
+              title="Disabled on hosted data: reset drops all application tables"
               className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-charcoal hover:bg-charcoal/80 text-offWhite border border-mauve/30 transition text-xs font-medium"
             >
               <RotateCcw className="w-4 h-4 text-mauve" />
-              <span>Reset to Opening Stock</span>
+              <span>Reset disabled on hosted data</span>
             </button>
             <button
               onClick={runBenchmark}
@@ -100,7 +90,7 @@ export const Benchmark: React.FC = () => {
               className="flex items-center space-x-2 px-5 py-2 rounded-lg bg-violet hover:bg-violet/90 text-white shadow-glow transition text-xs font-semibold"
             >
               {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-              <span>{loading ? "Running..." : "Reset & Run Benchmark"}</span>
+              <span>{loading ? "Running..." : "Run Benchmark"}</span>
             </button>
           </div>
         </div>
