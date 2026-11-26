@@ -41,8 +41,9 @@ jobs:
     - name: Run Test Suite (Postgres Invariants & Benchmark Gate 1)
       env:
         DATABASE_URL: postgresql+psycopg2://batchly_user:batchly_pass@localhost:5432/batchly
+        PYTHONPATH: .
       run: |
-        pytest api/tests/ -v
+        python -m pytest api/tests/ -v
 
     - name: Set up Node.js
       uses: actions/setup-node@v4
