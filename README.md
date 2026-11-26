@@ -210,6 +210,9 @@ Vite prints the local frontend URL, normally http://localhost:5173.
 
 ## 9. Deployment
 
+**Persistent database requirement:** Vercel functions must use a hosted PostgreSQL database. Set `DATABASE_URL` in Vercel Project Settings → Environment Variables for Production, Preview, and Development as appropriate. Do not use SQLite on Vercel: its filesystem is ephemeral and data can disappear between function invocations. The API now fails fast if Vercel is configured with SQLite. Keep the database URL and `SECRET_KEY` out of Git.
+
+
 The public prototype is deployed at:
 
 - Frontend: https://batchly-pi.vercel.app
