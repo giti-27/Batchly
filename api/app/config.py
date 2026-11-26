@@ -1,4 +1,5 @@
 ﻿
+import os
 from decimal import Decimal
 from typing import Optional
 
@@ -73,6 +74,14 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
+
+# Vercel serverless instances have an ephemeral filesystem. Never allow SQLite
+# there: writes can disappear between invocations and concurrent instances.
+if os.getenv("VERCEL") == "1" and settings.DATABASE_URL.lower().startswith("sqlite"):
+    raise RuntimeError(
+        "Vercel deployment requires a persistent PostgreSQL DATABASE_URL. "
+        "Configure it in Vercel Project Settings > Environment Variables."
+    )
 
 # Prevent insecure defaults from being used in production.
 if settings.APP_ENV.strip().lower() in {"production", "prod"}:
