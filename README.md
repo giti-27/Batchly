@@ -248,12 +248,4 @@ Record the actual test output and build result at submission time. Do not copy a
 - The seeded users, customer records, supplier, GSTINs, and transaction history are synthetic.
 - The benchmark seed script's `--reset` flag is destructive and must only be used with a disposable local database.
 
-## 12. Submission deliverables
 
-1. **Public source repository:** this repository, including application source, tests, seed scripts, deployment configuration, README, and design note.
-2. **Design note:** [`docs/design-note.md`](docs/design-note.md).
-3. **Live application:** https://batchly-pi.vercel.app/login
-4. **Demo video:** Add the unlisted YouTube or Drive link here after recording. Keep the video within the 8-minute limit and follow the Section 5 benchmark sequence.
-5. **Test evidence:** Include the fresh backend test and frontend build results in the submission message or accompanying evidence.
-
-**Demo video link:** _Add after uploading the final recording._
