@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { apiFetch } from "../lib/api";
 import { Navbar } from "../components/Navbar";
-import { CheckCircle2, XCircle, RotateCcw, Play, RefreshCw, Layers, ShieldCheck, AlertTriangle } from "lucide-react";
+import { CheckCircle2, XCircle, Play, RefreshCw, ShieldCheck } from "lucide-react";
 
 interface BenchmarkStep {
   step: number;
@@ -43,9 +43,6 @@ export const Benchmark: React.FC = () => {
     }
   };
 
-  const resetBenchmark = () => {
-    setError("Hosted reset is disabled because the reset endpoint drops every application table. Reseed only a disposable local database.");
-  };
   return (
     <div className="min-h-screen bg-deepBlack text-offWhite flex flex-col">
       <Navbar />
@@ -75,15 +72,6 @@ export const Benchmark: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-3">
-            <button
-              onClick={resetBenchmark}
-              disabled={true}
-              title="Disabled on hosted data: reset drops all application tables"
-              className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-charcoal hover:bg-charcoal/80 text-offWhite border border-mauve/30 transition text-xs font-medium"
-            >
-              <RotateCcw className="w-4 h-4 text-mauve" />
-              <span>Reset disabled on hosted data</span>
-            </button>
             <button
               onClick={runBenchmark}
               disabled={loading}
