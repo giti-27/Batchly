@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { apiFetch, getApiBase } from "../lib/api";
+import { apiFetch, getApiBase, getAuthToken } from "../lib/api";
 import { Navbar } from "../components/Navbar";
 import {
   Inbox, FileText, Truck, Package, Check, X, Pause, Sparkles,
@@ -149,6 +149,39 @@ export const AdminWorkspace: React.FC = () => {
       setSelectedOrder(null);
       loadData();
     } catch (err: any) { setActionMessage(`❌ ${err.message}`); }
+  };
+
+  // Open the invoice in a new tab while forwarding the same Bearer token
+  // used by apiFetch. Direct window.open(url) drops Authorization headers.
+  const openInvoice = async (invoiceId: number) => {
+    const invoiceWindow = window.open("", "_blank");
+    if (!invoiceWindow) {
+      setActionMessage("Please allow pop-ups to view the invoice.");
+      return;
+    }
+
+    invoiceWindow.document.title = "Loading invoice...";
+    invoiceWindow.document.body.innerHTML = "<p style='font-family: sans-serif; padding: 24px'>Loading invoice...</p>";
+
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${getApiBase()}/invoices/${invoiceId}/pdf`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || `Unable to open invoice (HTTP ${response.status})`);
+      }
+
+      const invoiceBlob = await response.blob();
+      const invoiceUrl = URL.createObjectURL(invoiceBlob);
+      invoiceWindow.location.replace(invoiceUrl);
+      window.setTimeout(() => URL.revokeObjectURL(invoiceUrl), 60_000);
+    } catch (err: any) {
+      invoiceWindow.close();
+      setActionMessage(`Unable to open invoice: ${err.message || "Please sign in again and retry."}`);
+    }
   };
 
   const raiseInvoice = async (orderId: number) => {
@@ -554,9 +587,9 @@ export const AdminWorkspace: React.FC = () => {
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${statusColor(inv.status)}`}>{inv.status}</span>
                         </td>
                         <td className="px-4 py-3 text-right space-x-1.5">
-                          <button onClick={e => { e.stopPropagation(); window.open(`${getApiBase()}/invoices/${inv.id}/pdf`, "_blank"); }}
+                          <button onClick={e => { e.stopPropagation(); void openInvoice(inv.id); }}
                             className="px-2.5 py-1 rounded bg-charcoal hover:bg-charcoal/80 text-offWhite text-[10px] border border-charcoal/80">
-                            PDF
+                            View / Print
                           </button>
                           {inv.status === "POSTED" && (
                             <button onClick={e => { e.stopPropagation(); dispatchInvoice(inv.id); }}

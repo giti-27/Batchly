@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { apiFetch } from "../lib/api";
 import { Navbar } from "../components/Navbar";
-import { CheckCircle2, XCircle, RotateCcw, Play, RefreshCw, Layers, ShieldCheck, AlertTriangle } from "lucide-react";
+import { CheckCircle2, XCircle, Play, RefreshCw, ShieldCheck } from "lucide-react";
 
 interface BenchmarkStep {
   step: number;
@@ -35,7 +35,7 @@ export const Benchmark: React.FC = () => {
     try {
       const res = await apiFetch<BenchmarkResponse>("/benchmark/run", { method: "POST" });
       setData(res);
-      setMessage("Benchmark verification executed against database.");
+      setMessage("Benchmark execution completed. Run once against a freshly seeded benchmark database.");
     } catch (err: any) {
       setError(err.message || "Failed to execute benchmark");
     } finally {
@@ -43,19 +43,6 @@ export const Benchmark: React.FC = () => {
     }
   };
 
-  const resetBenchmark = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await apiFetch("/benchmark/reset", { method: "POST" });
-      setMessage(res.message || "Benchmark database reset successfully.");
-      // Auto run verification after reset
-      await runBenchmark();
-    } catch (err: any) {
-      setError(err.message || "Failed to reset benchmark");
-      setLoading(false);
-    }
-  };
   return (
     <div className="min-h-screen bg-deepBlack text-offWhite flex flex-col">
       <Navbar />
@@ -65,7 +52,7 @@ export const Benchmark: React.FC = () => {
           <div>
             <div className="flex items-center space-x-3">
               <h1 className="font-heading text-2xl md:text-3xl font-bold tracking-wide text-offWhite">
-                PRD Section 11 Benchmark Verification
+                Benchmark Verification
               </h1>
               {data && (
                 <span
@@ -80,26 +67,18 @@ export const Benchmark: React.FC = () => {
               )}
             </div>
             <p className="text-sm text-mauve mt-1">
-              Deterministic verification against 26-page PRD mathematical, inventory, costing and GST benchmarks.
+              End-to-end verification of the required Murukku production, sales, GST, inventory and costing scenario.
             </p>
           </div>
 
           <div className="flex items-center space-x-3">
-            <button
-              onClick={resetBenchmark}
-              disabled={loading}
-              className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-charcoal hover:bg-charcoal/80 text-offWhite border border-mauve/30 transition text-xs font-medium"
-            >
-              <RotateCcw className="w-4 h-4 text-mauve" />
-              <span>Reset Benchmark</span>
-            </button>
             <button
               onClick={runBenchmark}
               disabled={loading}
               className="flex items-center space-x-2 px-5 py-2 rounded-lg bg-violet hover:bg-violet/90 text-white shadow-glow transition text-xs font-semibold"
             >
               {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-              <span>Run Benchmark</span>
+              <span>{loading ? "Running..." : "Run Benchmark"}</span>
             </button>
           </div>
         </div>
@@ -123,9 +102,9 @@ export const Benchmark: React.FC = () => {
             <div>
               <div className="text-xs uppercase tracking-wider text-mauve">Stock Ledger Drift</div>
               <div className="text-xl font-bold font-heading text-gold mt-1 flex items-center gap-2">
-                <span>0.000 kg/pkts</span>
-                <span className="text-xs font-body font-normal text-green-400 px-2 py-0.5 rounded bg-green-900/30 border border-green-500/30">
-                  PERFECT ZERO DRIFT
+                <span>{data.reconciliation.zero_drift ? "0.000" : `${data.reconciliation.total_drift_count} discrepancies`}</span>
+                <span className={`text-xs font-body font-normal px-2 py-0.5 rounded border ${data.reconciliation.zero_drift ? "text-green-400 bg-green-900/30 border-green-500/30" : "text-red-300 bg-red-900/30 border-red-500/30"}`}>
+                  {data.reconciliation.zero_drift ? "PERFECT ZERO DRIFT" : "DRIFT DETECTED"}
                 </span>
               </div>
               <p className="text-[11px] text-mauve mt-1">Cached stock_balance == SUM(stock_ledger.qty_delta)</p>
@@ -133,18 +112,18 @@ export const Benchmark: React.FC = () => {
             <div>
               <div className="text-xs uppercase tracking-wider text-mauve">Reconciliation Status</div>
               <div className="text-xl font-bold font-heading text-offWhite mt-1 flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-400" />
+                <CheckCircle2 className={`w-5 h-5 ${data.reconciliation.zero_drift ? "text-green-400" : "text-red-400"}`} />
                 <span>{data.reconciliation.status}</span>
               </div>
-              <p className="text-[11px] text-mauve mt-1">All items and batches match append-only ledger</p>
+              <p className="text-[11px] text-mauve mt-1">{data.reconciliation.zero_drift ? "All items and batches match the stock ledger" : "Stock ledger discrepancies need review"}</p>
             </div>
             <div>
               <div className="text-xs uppercase tracking-wider text-mauve">Benchmark Gate 1 Result</div>
-              <div className="text-xl font-bold font-heading text-green-400 mt-1 flex items-center gap-2">
+              <div className={`text-xl font-bold font-heading mt-1 flex items-center gap-2 ${data.overall_status === "ALL PASS" ? "text-green-400" : "text-red-400"}`}>
                 <ShieldCheck className="w-5 h-5" />
-                <span>100% PASSED</span>
+                <span>{data.passed_count}/{data.total_count} checks passed</span>
               </div>
-              <p className="text-[11px] text-mauve mt-1">Ready for production operations</p>
+              <p className="text-[11px] text-mauve mt-1">{data.overall_status === "ALL PASS" ? "All benchmark checks passed" : "Review failed checks before proceeding"}</p>
             </div>
           </div>
         )}
@@ -153,7 +132,7 @@ export const Benchmark: React.FC = () => {
         <div className="mt-8 glass-panel overflow-hidden border border-charcoal">
           <div className="px-6 py-4 border-b border-charcoal/80 flex items-center justify-between">
             <h2 className="font-heading font-semibold text-lg text-offWhite">Verification Step Matrix</h2>
-            <span className="text-xs text-mauve">Exact numbers sourced directly from PRD section 11</span>
+            <span className="text-xs text-mauve">Expected results from the assignment benchmark</span>
           </div>
 
           <div className="overflow-x-auto">
@@ -197,7 +176,7 @@ export const Benchmark: React.FC = () => {
         {/* Costing breakdown panel */}
         <div className="mt-8 glass-panel p-6 border border-charcoal">
           <h3 className="font-heading font-semibold text-base text-offWhite mb-3">
-            Section 11 Benchmark Costing Breakdown (Murukku 200g, 188 Good Packets)
+            Production Costing Breakdown (Murukku 200g, 188 Good Packets)
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3 text-xs">
             <div className="p-3 rounded-lg bg-charcoal/40 border border-charcoal">
