@@ -103,8 +103,8 @@ export const Benchmark: React.FC = () => {
               <div className="text-xs uppercase tracking-wider text-mauve">Stock Ledger Drift</div>
               <div className="text-xl font-bold font-heading text-gold mt-1 flex items-center gap-2">
                 <span>{data.reconciliation.zero_drift ? "0.000" : `${data.reconciliation.total_drift_count} discrepancies`}</span>
-                <span className="text-xs font-body font-normal text-green-400 px-2 py-0.5 rounded bg-green-900/30 border border-green-500/30">
-                  PERFECT ZERO DRIFT
+                <span className={`text-xs font-body font-normal px-2 py-0.5 rounded border ${data.reconciliation.zero_drift ? "text-green-400 bg-green-900/30 border-green-500/30" : "text-red-300 bg-red-900/30 border-red-500/30"}`}>
+                  {data.reconciliation.zero_drift ? "PERFECT ZERO DRIFT" : "DRIFT DETECTED"}
                 </span>
               </div>
               <p className="text-[11px] text-mauve mt-1">Cached stock_balance == SUM(stock_ledger.qty_delta)</p>
@@ -112,18 +112,18 @@ export const Benchmark: React.FC = () => {
             <div>
               <div className="text-xs uppercase tracking-wider text-mauve">Reconciliation Status</div>
               <div className="text-xl font-bold font-heading text-offWhite mt-1 flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-400" />
+                <CheckCircle2 className={`w-5 h-5 ${data.reconciliation.zero_drift ? "text-green-400" : "text-red-400"}`} />
                 <span>{data.reconciliation.status}</span>
               </div>
-              <p className="text-[11px] text-mauve mt-1">All items and batches match append-only ledger</p>
+              <p className="text-[11px] text-mauve mt-1">{data.reconciliation.zero_drift ? "All items and batches match the stock ledger" : "Stock ledger discrepancies need review"}</p>
             </div>
             <div>
               <div className="text-xs uppercase tracking-wider text-mauve">Benchmark Gate 1 Result</div>
-              <div className="text-xl font-bold font-heading text-green-400 mt-1 flex items-center gap-2">
+              <div className={`text-xl font-bold font-heading mt-1 flex items-center gap-2 ${data.overall_status === "ALL PASS" ? "text-green-400" : "text-red-400"}`}>
                 <ShieldCheck className="w-5 h-5" />
                 <span>{data.passed_count}/{data.total_count} checks passed</span>
               </div>
-              <p className="text-[11px] text-mauve mt-1">Ready for production operations</p>
+              <p className="text-[11px] text-mauve mt-1">{data.overall_status === "ALL PASS" ? "All benchmark checks passed" : "Review failed checks before proceeding"}</p>
             </div>
           </div>
         )}
