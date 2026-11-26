@@ -16,7 +16,7 @@ router = APIRouter(prefix="/reports", tags=["Reports"])
 def get_sales_register(
     from_date: Optional[datetime.date] = None,
     to_date: Optional[datetime.date] = None,
-    format: str = Query("json", enum=["json", "csv"]),
+    format: str = Query("json", pattern="^(json|csv)$"),
     db: Session = Depends(get_db),
     user: User = Depends(require_role(["ADMIN", "AUDITOR", "OWNER"]))
 ):
@@ -80,7 +80,7 @@ def get_gstr3b(
 
 @router.get("/stock-summary")
 def get_stock_summary_report(
-    format: str = Query("json", enum=["json", "csv"]),
+    format: str = Query("json", pattern="^(json|csv)$"),
     db: Session = Depends(get_db),
     user: User = Depends(require_role(["ADMIN", "PRODUCTION", "AUDITOR", "OWNER"]))
 ):
@@ -101,7 +101,7 @@ def get_stock_summary_csv(
 
 @router.get("/production-report")
 def get_production_report(
-    format: str = Query("json", enum=["json", "csv"]),
+    format: str = Query("json", pattern="^(json|csv)$"),
     db: Session = Depends(get_db),
     user: User = Depends(require_role(["ADMIN", "PRODUCTION", "AUDITOR", "OWNER"]))
 ):
