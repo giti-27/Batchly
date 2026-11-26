@@ -1,196 +1,259 @@
-# BATCHLY — Intelligent Order-to-Audit Manufacturing Operations Platform
+# BATCHLY
+## Order-to-Audit System for a Small Food Manufacturer
 
-> **Tagline:** *From Salesman's Order to Auditor's Report.*  
-> **Prepared for:** Gitika · NIT Trichy CDI Winter Internship 2026 · Product Requirements Document v1.0
+**Live application:** https://batchly-pi.vercel.app/login  
+**Source repository:** https://github.com/giti-27/Batchly  
+**API health endpoint:** https://batchly-pi.vercel.app/api/health
 
----
+Batchly is a web-based prototype that connects order entry, order approval, production, inventory movements, GST billing, dispatch, payment recording, and operational reporting for a small food manufacturer.
 
-## 1. Product Overview & Problem Statement
-Small-to-medium Indian snack manufacturers struggle with disjointed paper/notebook records, manual invoice re-typing, unmonitored raw material wastage, and labor-intensive month-end GST and cost reconciliation.
-
-**BATCHLY** bridges the **Sales Loop** (salesman order entry, admin credit verification, GST invoice generation, FEFO dispatch, collection allocation) and the **Production Loop** (material purchasing, BOM material issue, production execution, scrap accounting, moving weighted-average costing, and deterministic yield intelligence) with a single, tamper-evident, append-only stock ledger.
-
----
-
-## 2. Architecture & Technology Justification
-
-```
-  +-------------------------------------------------------------+
-  |              BATCHLY FRONTEND (PWA, React, Vite)            |
-  |    Salesman (Mobile) · Admin · Production (Tablet) · Auditor · Owner  |
-  +-------------------------------------------------------------+
-                                | REST JSON / Bearer JWT
-                                v
-  +-------------------------------------------------------------+
-  |               FASTAPI BACKEND (Python 3.12 / 3.13)          |
-  |  Thin Routers -> Service Layer -> Deterministic Engine      |
-  |  - ledger_service: Append-only, Trigger Enforced, Zero Drift|
-  |  - production_service: Dynamic BOM, FEFO, Costing           |
-  |  - sales_service: GST Intra/Inter, Gap-Free Invoicing       |
-  |  - intelligence_service: Decision Engine, Recall, What-if   |
-  +-------------------------------------------------------------+
-                                | SQLAlchemy 2 (Row Locking)
-                                v
-  +-------------------------------------------------------------+
-  |                   POSTGRESQL 16 DATABASE                    |
-  |  - stock_ledger: Append-Only Immutable Master               |
-  |  - stock_balance & batch_balance: Locking Caches (CHECK >=0)|
-  |  - invoice_counters: Row-Locked Gap-Free Sequence           |
-  +-------------------------------------------------------------+
-```
-
-### Technology Stack Justification
-- **FastAPI (Python 3.12+) & Pydantic v2:** Automatic typed OpenAPI validation, native `Decimal` precision support without floating-point leaks.
-- **SQLAlchemy 2 & PostgreSQL 16:** Real ACID transactions, deterministic pessimistic row locks (`SELECT ... FOR UPDATE`), `CHECK (qty >= 0)` constraints, and recursive CTEs for batch genealogy.
-- **Append-Only Stock Ledger (`stock_ledger`):** Stock is never overwritten. $\text{Balance} = \sum \Delta \text{qty}$. Database triggers unconditionally block `UPDATE` and `DELETE` on posted rows.
-- **React, Vite, Tailwind CSS & Framer Motion:** Installable Progressive Web App (PWA) with bespoke dark editorial SaaS visual styling, strictly adhering to **Cinzel** (headings) and **Fauna One** (body text).
-- **Firebase Authentication (Project: `limitless-c72be`):** Identity provider integration coupled with backend role authorization stored in PostgreSQL.
+> This project uses synthetic demonstration data only. The company, customers, GSTINs, addresses, and transactions in the benchmark are sample data and must not be treated as real business records.
 
 ---
 
-## 3. Strict Design System & Typography
+## 1. Problem addressed
 
-### Typography Rule
-- **Heading Font:** `Cinzel` (Page headers, major titles, KPI numbers).
-- **Body Font:** `Fauna One` (Forms, tables, descriptions, navigation, buttons).
-- *Strictly no Inter, Roboto, Poppins, or unapproved fonts.*
+Small food manufacturers often maintain sales, purchasing, production, inventory, and collections in separate registers. Batchly demonstrates a connected workflow in which production and sales transactions update stock and financial records, while role-based workspaces provide different views for sales, administration, production, auditing, and ownership.
 
-### Exact Color Palette
-| Color Name | Hex Code | Purpose |
+The prototype is built around the benchmark scenario in **Section 5** of the supplied problem statement.
+
+## 2. Technology stack
+
+| Layer | Technology | Purpose |
 |---|---|---|
-| **Deep Black** | `#080808` | Primary surface background |
-| **Charcoal** | `#39333B` | Secondary panels and table cards |
-| **Electric Violet** | `#8050ED` | Primary interactive buttons, badges, glows |
-| **Warm Gold** | `#E7CA65` | Financial totals, currency highlights, KPI accents |
-| **Sage** | `#BFCFC1` | Secondary light accents |
-| **Muted Mauve** | `#887984` | Metadata, timestamps, captions |
-| **Off-white** | `#F5F4EF` | Primary readable text |
+| Frontend | React, TypeScript, Vite | Browser-based role workspaces |
+| Backend | Python, FastAPI, Pydantic | REST API and business workflows |
+| ORM / persistence | SQLAlchemy | Database models and transactions |
+| Database | PostgreSQL for deployment; SQLite supported for local tests | Persistent application data |
+| Authentication | Backend password verification with bcrypt and JWT | Login and role-based API authorization |
+| Deployment | Vercel | Hosted frontend and API services |
 
----
+Firebase-related configuration/dependencies may remain in the codebase for compatibility, but **the current login flow is backend-managed bcrypt password verification followed by JWT authentication**. Firebase Authentication is not the active authentication provider.
 
-## 4. Five Role-Specific Workspaces
+## 3. Implemented workflows
 
-1. **Salesman Workspace (`/salesman`):** Mobile-first design with bottom navigation. Access to assigned customers only. Product quantities in whole packet increments, quick-add carton button (`+20` packets), instant price snapshot from price list, order review with live GST preview, idempotent order creation via client UUID.
-2. **Admin Workspace (`/admin`):** Order inbox with age and shortage badges, stock availability check, one-click order approval (with stock reservation), hold, or reject. Gap-free GST invoice creation (`BTL/YYYY-YY/0001`), FEFO dispatch execution, payment allocation, and customer outstanding calculation.
-3. **Production Workspace (`/production`):** Tablet-optimized touch targets. Planned run creation with batch multiplier, BOM material availability check, FEFO raw material issue, production run completion with scrap absorption, variance analysis (`abs(variance) > 3.00%` strict flagging), and run costing.
-4. **Auditor Workspace (`/auditor`):** Strictly read-only badge. Statutory Sales Register, Purchase Register, Stock Summary with mathematical balance check ($\text{Opening} + \text{In} - \text{Out} \pm \text{Adj} - \text{Closing} \equiv 0$), Stock Ledger, GSTR-1 & GSTR-3B 3.1(a) reports, Batch Recall Simulator (forward & backward trace), batch quarantine, and SHA-256 hash-chain integrity verification.
-5. **Owner Workspace (`/owner`):** Executive overview with gross margin %, finished goods days of cover, variance alerts, top 3 operational insights, and interactive **What-If Simulator** ("SIMULATION — NO BUSINESS RECORDS CHANGED").
+### Sales and dispatch
+- Salesman order entry against assigned customers.
+- Admin review and order approval/hold/rejection.
+- Stock availability checks before fulfilment.
+- GST invoice generation with intra-state CGST/SGST and inter-state tax handling.
+- Dispatch and finished-goods stock deduction.
+- Payment recording and customer outstanding calculation.
 
----
+### Purchasing, production, and inventory
+- Supplier purchase posting and raw-material stock receipt.
+- BOM-based production planning and material issue.
+- Production completion with good output and packaging consumption/damage.
+- Stock movements recorded through the stock ledger.
+- Production yield and material-consumption variance calculation.
+- Run-level material and overhead costing.
+- Stock balance reconciliation.
 
-## 5. Seed Demo Accounts
+### Roles
+The seeded demonstration data contains these accounts:
 
-All demo accounts use the standard password: `demo123`
-
-| Username | Role | Primary Workspace |
+| Username | Role | Demonstration password |
 |---|---|---|
-| `admin` | `ADMIN` | `/admin` |
-| `salesman_a` | `SALESMAN` | `/salesman` (Assigned: Retailer A, TN) |
-| `salesman_b` | `SALESMAN` | `/salesman` (Assigned: Distributor B, KA) |
-| `production` | `PRODUCTION` | `/production` |
-| `auditor` | `AUDITOR` | `/auditor` (Strictly Read-Only) |
-| `owner` | `OWNER` | `/owner` (Executive Intelligence) |
+| `admin` | Admin | `demo123` |
+| `salesman_a` | Salesman | `demo123` |
+| `salesman_b` | Salesman | `demo123` |
+| `production` | Production | `demo123` |
+| `auditor` | Auditor | `demo123` |
+| `owner` | Owner | `demo123` |
 
----
+These are public evaluation credentials for a synthetic demo dataset. Do not reuse them for real users or production accounts. The Auditor role is intended to be read-only; verify this during the recorded walkthrough.
 
-## 6. PRD Section 11 Benchmark Specification (Gate 1: 100% PASSED)
+## 4. Benchmark scenario (Problem Statement Section 5)
 
-| Step | Action | PRD Expected Value | Batchly Live Database Value | Status |
-|---|---|---|---|:---:|
-| **1** | Purchase 60 kg flour @ ₹45/kg | Flour: 160 kg; Wtd Avg: ₹43.125/kg | Flour: 160.000 kg; Wtd Avg: ₹43.125/kg | **PASS** |
-| **2** | Production Issue (Flour 40kg, Oil 10.5L, Spice 1.2kg) | Flour: 120kg; Oil: 19.5L; Spice: 3.8kg; Oil +5% flagged | Flour: 120.000kg; Oil: 19.500L; Spice: 3.800kg; Oil +5.00% flagged | **PASS** |
-| **3** | Complete Run (188 good pkts, 6 damaged pouches, 9 cartons) | Pouches: 306 (-3% unflagged); Cartons: 21 (-10% flagged); Yield: -6% flagged; FG: 238 pkts; Cost/pkt: ₹31.14 | Pouches: 306 (-3.00% unflagged); Cartons: 21 (-10.00% flagged); Yield: -6.00% flagged; FG: 238 pkts; Cost/pkt: ₹31.14 | **PASS** |
-| **4-5** | Salesman A Order 150 pkts for Retailer A; Approve, Invoice, Dispatch | Invoice: Taxable ₹7,500 + CGST ₹187.50 + SGST ₹187.50 = ₹7,875.00. FEFO: 50 opening + 100 run batch. FG remaining: 88 pkts | Invoice `BTL/2026-27/0001`: Taxable ₹7,500.00, CGST ₹187.50, SGST ₹187.50, Total ₹7,875.00. FEFO: 50 from opening batch + 100 from run batch. FG remaining: 88 pkts | **PASS** |
-| **6** | Salesman B Order 120 pkts for Distributor B | Available: 88, Shortage: 32; Decision Engine recommends 1 batch; Admin holds order | Shortage: 32 pkts detected; Decision Engine recommends 1 batch (materials sufficient); Admin holds order | **PASS** |
-| **7** | Payment ₹4,000 from Retailer A | Allocated to 0001; Outstanding: ₹3,875.00; Ageing: 0-30 days | Allocated to 0001; Outstanding: ₹3,875.00; Ageing: 0-30 days | **PASS** |
-| **8** | Overheads: Labour ₹1,200 + Gas/Power ₹600 | Total Run Cost: ₹5,855.00; Cost/pkt: ₹31.1436 (₹31.14); Margin: ₹18.86 (37.7%) | Total Cost: ₹5,855.00; Cost/pkt: ₹31.14; Margin: ₹18.86 (37.7%) | **PASS** |
-| **9** | Reports & Final Ledger Reconciliation | Reconciliation drift == 0; zero_drift == True | Reconciliation status: HEALTHY; Total drift: 0; zero_drift: True | **PASS** |
+The benchmark seed and automated test exercise the following scenario:
 
----
+1. Purchase 60 kg of flour at ₹45/kg.
+2. Issue 40 kg flour, 10.5 L oil, and 1.2 kg spice mix to a production run.
+3. Complete the run with 188 good packets, 6 damaged pouches, and 9 cartons.
+4. Create a 150-packet order for Retailer A (Tamil Nadu).
+5. Approve the order, generate the GST invoice, and dispatch it.
+6. Create a 120-packet order for Distributor B (Karnataka) and demonstrate the stock shortage.
+7. Record a ₹4,000 payment from Retailer A.
+8. Include ₹1,200 labour and ₹600 gas/power overheads in the production run costing.
+9. Review available reports and verify stock-ledger reconciliation.
 
-## 7. Costing Methodology & Decoupling Rule
+### Expected benchmark values
 
-1. **Perpetual Moving Weighted Average:**
-   $$\bar{C}_{\text{new}} = \frac{Q_{\text{current}} \cdot \bar{C}_{\text{current}} + Q_{\text{new}} \cdot C_{\text{purchase}}}{Q_{\text{current}} + Q_{\text{new}}}$$
-2. **Decoupling Rule:** Batches are strictly used for physical tracking, expiry management, and FEFO allocation. Batches are **never** used for inventory valuation. This eliminates batch-vs-average accounting drift.
-3. **Packaging Scrap Absorption:** Damaged packaging units are absorbed into the cost of good output packets.
-4. **Overhead Allocation:** 100% of run labor and power overheads are allocated to that run's good output:
-   $$\text{Cost Per Packet} = \frac{\sum (\text{Actual Consumed Quantity} \times \text{Snapshot Unit Cost}) + \text{Run Overheads}}{\text{Actual Good Packets Produced}}$$
+| Check | Expected result |
+|---|---:|
+| Flour after purchase | 160 kg |
+| Flour moving weighted-average cost | ₹43.125/kg |
+| Flour after production issue | 120 kg |
+| Oil after production issue | 19.5 L |
+| Spice mix after production issue | 3.8 kg |
+| Pouches after use and damage | 306 |
+| Cartons after production | 21 |
+| Finished goods after production | 238 packets |
+| Yield variance | -6% |
+| Oil consumption variance | +5% |
+| Retailer A taxable value | ₹7,500.00 |
+| Retailer A CGST | ₹187.50 |
+| Retailer A SGST | ₹187.50 |
+| Retailer A invoice total | ₹7,875.00 |
+| Finished goods after dispatch | 88 packets |
+| Distributor B shortage | 32 packets |
+| Retailer A outstanding after payment | ₹3,875.00 |
+| Production run total cost | ₹5,855.00 |
+| Production cost per good packet | Approximately ₹31.14 |
+| Final stock reconciliation | Zero drift / healthy |
 
----
+The benchmark values above are verified by the automated benchmark test and benchmark seed implementation. They are not a claim that the currently hosted database has been reset to this state. The live demonstration should be performed against a prepared demo dataset and the displayed values should be checked before recording.
 
-## 8. Local Setup & Execution Guide
+## 5. Reports and exports
+
+The current backend exposes the following report functionality:
+
+| Report / endpoint | Current output |
+|---|---|
+| Sales register | JSON or CSV |
+| GST summary | JSON |
+| GSTR-1-style outward-supply summary | JSON |
+| GSTR-3B-style outward-supply summary | JSON |
+| Stock summary | JSON or CSV |
+| Production report | JSON or CSV |
+| Audit log | JSON |
+
+CSV export is implemented for the sales register, stock summary, and production report. CSV cells are sanitized against common spreadsheet formula-injection prefixes.
+
+**Known reporting limitations:** A dedicated purchase-register report, stock-ledger export, payment/collections and receivables-ageing report export, and monthly-report PDF/Excel export are not currently exposed by the inspected report router. Do not present these as completed features in the demo. The application may contain related transaction screens or APIs, but those are not equivalent to the missing report exports.
+
+## 6. Feature scope against the problem statement
+
+| Scope tier | Current implementation summary |
+|---|---|
+| Must-have | Role-based workflow; masters and BOM-backed production; order entry and admin approval; GST invoicing; production stock updates; variance calculation; stock summary; sales register and stock-summary CSV |
+| Should-have | Supplier purchase posting; payment recording and outstanding calculation; run overhead costing; GST summary; production report; owner/auditor workspaces |
+| Stretch / partial | Batch/FEFO-oriented stock handling and additional intelligence features are present in parts of the application. Offline order sync, GPS visit tracking, government e-invoice/e-waybill integration, and Tally integration are not claimed as complete. |
+
+This table is intentionally conservative. It distinguishes implemented prototype functionality from integrations or report exports that are not present.
+
+## 7. Architecture and data integrity
+
+- FastAPI exposes the application API.
+- SQLAlchemy maps the application entities to the configured database.
+- Inventory movements are represented through stock-ledger entries.
+- Stock-balance records are maintained for operational reads and checked against ledger movements through reconciliation.
+- Monetary calculations use integer paise and decimal arithmetic in the backend.
+- Passwords are stored as bcrypt hashes; authenticated API requests use JWT bearer tokens.
+- Role checks are applied to protected API routes.
+
+See [`docs/design-note.md`](docs/design-note.md) for the concise technical design note and data-flow overview.
+
+## 8. Run locally
 
 ### Prerequisites
 - Python 3.12 or 3.13
-- Node.js 20+ and npm
-- Docker (optional for containerized single-command execution)
+- Node.js 20 or newer
+- npm
 
-### 1. Backend Setup
-```bash
-# Install Python dependencies
-pip install -r api/requirements.txt
+### Backend
 
-# Reset and seed benchmark dataset with steps 1 to 9 executed
-python api/seed/seed_benchmark.py --reset --run
+Run these commands from the repository root in PowerShell:
 
-# Seed historical production runs for anomaly rules R2-R7
-python api/seed/seed_demo_history.py
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r api\requirements-dev.txt
+Copy-Item .env.example .env
+```
 
-# Run all automated tests
-pytest api/tests/ -v
+Edit `.env` and set a unique local `SECRET_KEY`. Keep `.env` private; it must not be committed.
 
-# Start FastAPI server
+For a **fresh local database only**, seed the benchmark:
+
+```powershell
+python api\seed\seed_benchmark.py --reset --run
+```
+
+The `--reset` option drops and recreates database tables. Never run it against a shared, hosted, or production database. Use a disposable local database.
+
+Optional historical demonstration data:
+
+```powershell
+python api\seed\seed_demo_history.py
+```
+
+Run backend tests:
+
+```powershell
+python -m pytest api\tests -q
+```
+
+Start the API from the repository root:
+
+```powershell
 uvicorn api.app.main:app --reload --port 8000
 ```
 
-### 2. Frontend Setup
-```bash
+API documentation: http://127.0.0.1:8000/docs
+
+### Frontend
+
+Open a second PowerShell terminal:
+
+```powershell
 cd web
 npm install
+npm run build
 npm run dev
-# Frontend runs at http://localhost:5173
 ```
 
-### 3. Docker Compose (Single-Command Run)
-```bash
-docker compose up --build
+Vite prints the local frontend URL, normally http://localhost:5173.
+
+`npm install` is used here because the repository instructions should not assume a committed lockfile is available. If a `package-lock.json` is added and committed, use `npm ci` for reproducible installs.
+
+## 9. Deployment
+
+The public prototype is deployed at:
+
+- Frontend: https://batchly-pi.vercel.app
+- Login: https://batchly-pi.vercel.app/login
+- API health: https://batchly-pi.vercel.app/api/health
+
+Deployment requires environment variables to be configured in the hosting provider. Do not put database credentials, JWT secrets, or private keys in source control.
+
+The public demo credentials are listed in Section 3. They are intended only for the synthetic evaluation dataset.
+
+## 10. Tests
+
+Run the backend test suite from the repository root:
+
+```powershell
+python -m pytest api\tests -q
 ```
-- API & Swagger: `http://localhost:8000/docs`
-- Web Application: `http://localhost:5173`
 
----
+Build the frontend:
 
-## 9. Feature Tiers & Scope Declarations
+```powershell
+cd web
+npm install
+npm run build
+```
 
-### P0 (Must Have — Fully Implemented & Tested)
-- Append-only stock ledger with database mutation prevention trigger (Invariant I1).
-- Non-negative stock constraints (`CHECK (qty >= 0)`) and zero-drift cache reconciliation (Invariant I2, I3).
-- Strict integer paise financials (`BIGINT`) with Decimal `ROUND_HALF_UP` (Invariants I4, I6).
-- Normalized base units (`g`, `ml`, `pcs`, `packet`) with boundary UOM conversions (Invariant I5).
-- Production lifecycle (`PLANNED -> IN_PROGRESS -> COMPLETED`) with strict tolerance variance flags (`abs(variance) > 3.00%`).
-- Dynamic BOM architecture supporting product pack size variants (e.g. 200g vs 500g).
-- Sales order booking with client-generated UUID idempotency (Invariant I10).
-- Admin verification, stock reservation, and row-locked gap-free GST invoicing (`BTL/YYYY-YY/0001`).
-- FEFO dispatch allocation and payment collection with receivables ageing.
-- Full Section 11 benchmark passing 100% via automated tests and interactive `/benchmark` page.
+Record the actual test output and build result at submission time. Do not copy an old test log and describe it as a fresh run.
 
-### P1 (Should Have — Fully Implemented)
-- Batch genealogy recursive CTEs (`v_batch_genealogy`).
-- Forward & backward batch recall simulator with quarantine capabilities.
-- Production Decision Engine calculating batches needed, BOM ingredient shortfalls, and production cost.
-- Anomaly detection rules R1–R7 with strict sample size guards ($n \ge 3$, $n \ge 5$).
-- Owner executive intelligence dashboard.
-- Statutory reports with CSV export escaping formula injections (`=`, `+`, `-`, `@`).
+## 11. Known limitations and assumptions
 
-### P2 (Differentiators — Implemented)
-- Tamper-evident cryptographic SHA-256 hash chaining on stock ledger and audit logs (`/audit/integrity`).
-- What-If simulator pure read-only projection function with 4 instant presets.
-- Public QR batch traceability certificate (`/t/{batch_no}`).
-- Installable Progressive Web App (PWA) manifest.
+- This is an internship evaluation prototype, not a certified accounting, GST filing, or ERP product.
+- GST outputs are demonstrative and do not submit returns to government systems.
+- No live GST e-invoice/e-waybill, payment gateway, or Tally integration is claimed.
+- The current reports router does not expose every report/export listed as a desired capability in the problem statement; see Section 5.
+- Offline order synchronization should be treated as unverified/not delivered unless it is separately tested end-to-end.
+- The seeded users, customer records, supplier, GSTINs, and transaction history are synthetic.
+- The benchmark seed script's `--reset` flag is destructive and must only be used with a disposable local database.
 
-### Known Gaps (Declared Out of Scope per PRD Section 0)
-- Real government GST e-way bill / e-invoice API credentials (dummy GSTIN format used for benchmark).
-- Real payment gateway API integration (direct payment recording with allocation implemented).
-- Multi-warehouse and multi-company inventory transfers.
-- Supplier purchase returns and supplier scorecards.
+## 12. Submission deliverables
+
+1. **Public source repository:** this repository, including application source, tests, seed scripts, deployment configuration, README, and design note.
+2. **Design note:** [`docs/design-note.md`](docs/design-note.md).
+3. **Live application:** https://batchly-pi.vercel.app/login
+4. **Demo video:** Add the unlisted YouTube or Drive link here after recording. Keep the video within the 8-minute limit and follow the Section 5 benchmark sequence.
+5. **Test evidence:** Include the fresh backend test and frontend build results in the submission message or accompanying evidence.
+
+**Demo video link:** _Add after uploading the final recording._
