@@ -33,6 +33,13 @@ const PERSONAS: Persona[] = [
     icon: <ShoppingCart className="w-4 h-4 text-sage" />,
   },
   {
+    id: "salesman_b",
+    name: "Field Salesman B",
+    role: "SALESMAN",
+    desc: "Distributor B orders and order-status tracking",
+    icon: <ShoppingCart className="w-4 h-4 text-sage" />,
+  },
+  {
     id: "production",
     name: "Plant Supervisor",
     role: "PRODUCTION",
@@ -222,8 +229,17 @@ export const Login: React.FC = () => {
                 return (
                   <div
                     key={p.id}
+                    role="button"
+                    tabIndex={0}
+                    aria-pressed={isSelected}
                     onClick={() => handleSelectPersona(p)}
-                    className={`p-3 rounded-xl cursor-pointer border transition flex items-start gap-2.5 ${
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        handleSelectPersona(p);
+                      }
+                    }}
+                    className={`p-3 rounded-xl cursor-pointer border transition flex items-start gap-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-gold ${
                       isSelected
                         ? "bg-violet/15 border-violet shadow-glow"
                         : "bg-charcoal/30 border-charcoal/60 hover:bg-charcoal/60 hover:border-mauve/40"
