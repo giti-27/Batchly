@@ -212,6 +212,11 @@ export const AdminWorkspace: React.FC = () => {
     if (!Number.isInteger(invoiceId) || invoiceId <= 0) {
       setPaymentMsg("❌ Please select a valid invoice from the list."); return;
     }
+    const selectedInvoice = invoices.find(inv => Number(inv.id) === invoiceId);
+    const customerId = Number(selectedInvoice?.customer_id);
+    if (!Number.isInteger(customerId) || customerId <= 0) {
+      setPaymentMsg("❌ This invoice is missing its customer link. Please refresh invoices or raise the invoice again."); return;
+    }
     if (!Number.isFinite(amountRupees) || amountRupees <= 0) {
       setPaymentMsg("❌ Enter an amount greater than ₹0."); return;
     }
@@ -220,6 +225,7 @@ export const AdminWorkspace: React.FC = () => {
         method: "POST",
         body: JSON.stringify({
           invoice_id: invoiceId,
+          customer_id: customerId,
           amount_paise: Math.round(amountRupees * 100),
           mode: paymentForm.mode,
           reference_no: paymentForm.ref || null,
