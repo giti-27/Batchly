@@ -19,6 +19,7 @@ def list_invoices(db: Session = Depends(get_db), user: User = Depends(require_ro
             "invoice_no": inv.invoice_no,
             "order_id": inv.order_id,
             "customer_name": inv.customer_name,
+            "customer_id": inv.customer_id,
             "place_of_supply": inv.place_of_supply_state,
             "supply_type": inv.supply_type,
             "total_taxable_rupees": paise_to_rupees_str(inv.total_taxable_paise),
