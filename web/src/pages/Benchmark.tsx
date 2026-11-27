@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { apiFetch } from "../lib/api";
+import { apiFetch, getCurrentUserRole } from "../lib/api";
 import { Navbar } from "../components/Navbar";
 import { CheckCircle2, XCircle, Play, RefreshCw, ShieldCheck } from "lucide-react";
 
@@ -24,6 +24,7 @@ interface BenchmarkResponse {
 }
 
 export const Benchmark: React.FC = () => {
+  const canResetDemo = getCurrentUserRole() === "ADMIN";
   const [data, setData] = useState<BenchmarkResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [resetting, setResetting] = useState(false);
@@ -107,6 +108,7 @@ export const Benchmark: React.FC = () => {
               {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
               <span>{loading ? "Running..." : "Run Benchmark"}</span>
             </button>
+            {canResetDemo && (
             <button
               onClick={resetDemoData}
               disabled={loading || resetting}
@@ -116,6 +118,7 @@ export const Benchmark: React.FC = () => {
               {resetting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               <span>{resetting ? "Resetting..." : "Reset Demo Data"}</span>
             </button>
+            )}
           </div>
         </div>
 
