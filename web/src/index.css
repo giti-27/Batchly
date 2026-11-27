@@ -59,17 +59,17 @@
 }
 
 .glass-panel {
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(22, 64, 57, 0.12);
+  border: 1px solid rgba(22, 64, 57, 0.16);
   border-radius: 1rem;
   box-shadow: var(--shadow-glass);
 }
 
 .glass-panel-glow {
   background: var(--batchly-white);
-  border: 1px solid rgba(142, 243, 206, 0.9);
+  border: 1px solid rgba(22, 64, 57, 0.2);
   box-shadow: 0 18px 55px rgba(5, 35, 29, 0.2);
   border-radius: 1.25rem;
 }
@@ -81,42 +81,63 @@ button:not(:disabled) {
     box-shadow 160ms ease, color 160ms ease, transform 120ms ease;
 }
 
-/* Readable text on pale panels: keep mint as a brand accent, not tiny body copy. */
-@layer utilities {
-  .glass-panel .text-mauve,
-  .glass-panel-glow .text-mauve,
-  .bg-white .text-mauve,
-  .bg-offWhite .text-mauve {
-    color: #46645C;
-  }
+/*
+ * Contrast is assigned by surface, not by brand token alone.
+ * Dark workspace: muted labels become pale mint-grey.
+ * Light cards: all copy stays deep green; mint accents are darkened.
+ */
+.min-h-screen.bg-deepBlack main .text-mauve,
+.min-h-screen.bg-deepBlack main label.text-mauve,
+.min-h-screen.bg-deepBlack main button.text-mauve {
+  color: #B8D2C9;
+}
 
-  .glass-panel .text-sage,
-  .glass-panel .text-gold,
-  .glass-panel-glow .text-sage,
-  .glass-panel-glow .text-gold,
-  .bg-white .text-sage,
-  .bg-white .text-gold,
-  .bg-offWhite .text-sage,
-  .bg-offWhite .text-gold {
-    color: #17634F;
-  }
+.min-h-screen.bg-deepBlack main .glass-panel .text-mauve,
+.min-h-screen.bg-deepBlack main .glass-panel label.text-mauve,
+.glass-panel .text-mauve,
+.glass-panel-glow .text-mauve,
+.bg-white .text-mauve,
+.bg-offWhite .text-mauve {
+  color: #46645C;
+}
 
-  .glass-panel .text-offWhite,
-  .glass-panel-glow .text-offWhite,
-  .bg-white .text-offWhite,
-  .bg-offWhite .text-offWhite {
-    color: #153A33;
-  }
+.glass-panel .text-sage,
+.glass-panel .text-gold,
+.glass-panel-glow .text-sage,
+.glass-panel-glow .text-gold,
+.bg-white .text-sage,
+.bg-white .text-gold,
+.bg-offWhite .text-sage,
+.bg-offWhite .text-gold {
+  color: #17634F;
+}
 
-  /* Tables and tinted stock tiles also need readable foregrounds. */
-  .glass-panel thead,
-  .glass-panel th,
-  .glass-panel td,
-  .glass-panel-glow thead,
-  .glass-panel-glow th,
-  .glass-panel-glow td {
-    color: #31564E;
-  }
+.glass-panel .text-offWhite,
+.glass-panel-glow .text-offWhite,
+.bg-white .text-offWhite,
+.bg-offWhite .text-offWhite {
+  color: #153A33;
+}
+
+/* The navbar is a pale glass surface; its logo's B is the deliberate exception. */
+header.glass-panel .text-gold {
+  color: #8EF3CE;
+}
+header.glass-panel .text-offWhite {
+  color: #153A33;
+}
+header.glass-panel .text-mauve {
+  color: #46645C;
+}
+
+/* Keep table headings and cells readable on pale cards. */
+.glass-panel thead,
+.glass-panel th,
+.glass-panel td,
+.glass-panel-glow thead,
+.glass-panel-glow th,
+.glass-panel-glow td {
+  color: #31564E;
 }
 
 /* Gentle expanding rings replace the old continuously rotating 3D ornaments. */
