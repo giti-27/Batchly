@@ -161,8 +161,13 @@ export const ProductionWorkspace: React.FC = () => {
       const poNo = `PO-${Date.now().toString().slice(-6)}`;
       const invNo = `INV-${Date.now().toString().slice(-6)}`;
       const batchNo = `RM-REC-${Date.now().toString().slice(-4)}`;
-      const ratePaise = Math.round(parseFloat(receiptRate) * 100);
-      const qtyBase = parseFloat(receiptQty) * (receiptItemId === 1 ? 1000 : 1);
+      // The receipt form accepts display units (kg, L, or pcs), while inventory
+      // stores flour/oil/spice in grams or millilitres.
+      const usesThousandBaseUnits = [1, 2, 3].includes(receiptItemId);
+      const unitFactor = usesThousandBaseUnits ? 1000 : 1;
+      const qtyBase = parseFloat(receiptQty) * unitFactor;
+      // Convert ₹ per display unit to paise per base unit.
+      const ratePaise = Math.round((parseFloat(receiptRate) * 100) / unitFactor);
 
       await apiFetch("/purchases", {
         method: "POST",
@@ -253,10 +258,10 @@ export const ProductionWorkspace: React.FC = () => {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="p-4 rounded-xl bg-violet/20 border border-violet/40 text-offWhite text-sm flex items-center justify-between"
+              className="p-4 rounded-xl bg-[#DDF8ED] border border-[#4B9B7E] text-[#164039] shadow-md text-sm font-semibold flex items-center justify-between"
             >
               <span>{msg}</span>
-              <button onClick={() => setMsg(null)} className="text-mauve hover:text-offWhite">✕</button>
+              <button onClick={() => setMsg(null)} className="text-[#31564E] hover:text-[#0B2F28] rounded-md px-2 py-1" aria-label="Dismiss notification">✕</button>
             </motion.div>
           )}
         </AnimatePresence>
@@ -462,7 +467,16 @@ export const ProductionWorkspace: React.FC = () => {
                 <label className="block text-xs uppercase tracking-wider text-mauve mb-1">Item</label>
                 <select
                   value={receiptItemId}
-                  onChange={(e) => setReceiptItemId(parseInt(e.target.value))}
+                  onChange={(e) => {
+                    const nextId = parseInt(e.target.value);
+                    setReceiptItemId(nextId);
+                    // Helpful starting values in the selected item's display units.
+                    if (nextId === 1) { setReceiptQty("60"); setReceiptRate("45"); }
+                    else if (nextId === 2) { setReceiptQty("1.5"); setReceiptRate("140"); }
+                    else if (nextId === 3) { setReceiptQty("1.2"); setReceiptRate("200"); }
+                    else if (nextId === 4) { setReceiptQty("100"); setReceiptRate("2.5"); }
+                    else if (nextId === 5) { setReceiptQty("10"); setReceiptRate("15"); }
+                  }}
                   className="w-full px-4 py-2.5 rounded-lg bg-charcoal/60 border border-charcoal text-offWhite font-body text-sm"
                 >
                   <option value={1} className="bg-deepBlack">Murukku Flour (kg)</option>
@@ -474,7 +488,7 @@ export const ProductionWorkspace: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs uppercase tracking-wider text-mauve mb-1">Quantity</label>
+                <label className="block text-xs uppercase tracking-wider text-mauve mb-1">Quantity (kg / L / pcs)</label>
                 <input
                   type="number"
                   value={receiptQty}
@@ -484,7 +498,7 @@ export const ProductionWorkspace: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs uppercase tracking-wider text-mauve mb-1">Rate per unit (₹)</label>
+                <label className="block text-xs uppercase tracking-wider text-mauve mb-1">Rate per display unit (₹)</label>
                 <input
                   type="number"
                   step="0.1"
