@@ -30,6 +30,7 @@ export const ProductionWorkspace: React.FC = () => {
 
   // New Purchase / Goods Receipt state
   const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [supplierLoadError, setSupplierLoadError] = useState<string | null>(null);
   const [selectedSupplierId, setSelectedSupplierId] = useState<number | null>(null);
   const [receiptItemId, setReceiptItemId] = useState<number>(1);
   const [receiptQty, setReceiptQty] = useState("50");
@@ -46,12 +47,23 @@ export const ProductionWorkspace: React.FC = () => {
         apiFetch("/runs").catch(() => []),
         apiFetch("/masters/items?type=FINISHED_GOOD").catch(() => apiFetch("/products")),
         apiFetch("/stock/summary").catch(() => []),
-        apiFetch("/masters/suppliers").catch(() => []),
+        apiFetch("/suppliers").catch((err: any) => {
+          setSupplierLoadError(err?.message || "Could not load suppliers. Please refresh and try again.");
+          return [];
+        }),
       ]);
       setRuns(rList || []);
       setProducts(pList || []);
       setStockSummary(sList || []);
       setSuppliers(supList || []);
+      if (supList && supList.length > 0) {
+        setSupplierLoadError(null);
+        if (!selectedSupplierId || !supList.some((supplier: any) => supplier.id === selectedSupplierId)) {
+          setSelectedSupplierId(supList[0].id);
+        }
+      } else if (!supplierLoadError) {
+        setSupplierLoadError("No active suppliers were returned. Check the supplier records in Admin → Suppliers.");
+      }
       if (pList && pList.length > 0 && !selectedProductId) {
         setSelectedProductId(pList[0].id);
       }
@@ -461,15 +473,19 @@ export const ProductionWorkspace: React.FC = () => {
                 <label className="block text-xs uppercase tracking-wider text-mauve mb-1">Supplier</label>
                 <select
                   value={selectedSupplierId || ""}
-                  onChange={(e) => setSelectedSupplierId(parseInt(e.target.value))}
+                  onChange={(e) => setSelectedSupplierId(e.target.value ? parseInt(e.target.value) : null)}
                   className="w-full px-4 py-2.5 rounded-lg bg-charcoal/60 border border-charcoal text-offWhite font-body text-sm"
                 >
+                  <option value="" className="bg-deepBlack">Select a supplier</option>
                   {suppliers.map((s) => (
                     <option key={s.id} value={s.id} className="bg-deepBlack">
                       {s.name} ({s.state_code === "33" ? "TN" : s.state_code})
                     </option>
                   ))}
                 </select>
+                {supplierLoadError && (
+                  <p role="alert" className="mt-2 text-sm font-semibold text-red-700">{supplierLoadError}</p>
+                )}
               </div>
 
               <div>
