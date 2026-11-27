@@ -231,9 +231,32 @@ export const AdminWorkspace: React.FC = () => {
           reference_no: paymentForm.ref || null,
         }),
       });
-      setPaymentMsg(`✅ Payment of ₹${paymentForm.amount} recorded. Outstanding: ₹${(res.outstanding_paise / 100).toFixed(2)}`);
+      // Prefer the customer-level outstanding returned by the refreshed ledger.
+      // Keep a safe fallback for older API deployments that may omit the response field.
+      let outstandingRupees: number | null = null;
+      const responseOutstandingPaise = Number(res?.outstanding_paise ?? res?.net_outstanding_paise);
+      if (Number.isFinite(responseOutstandingPaise) && responseOutstandingPaise >= 0) {
+        outstandingRupees = responseOutstandingPaise / 100;
+      } else {
+        try {
+          const rows = await apiFetch("/payments/outstanding");
+          const customerRow = Array.isArray(rows)
+            ? rows.find((row: any) => Number(row.customer_id) === customerId)
+            : null;
+          const parsedOutstanding = Number(customerRow?.total_outstanding);
+          if (Number.isFinite(parsedOutstanding) && parsedOutstanding >= 0) {
+            outstandingRupees = parsedOutstanding;
+          }
+        } catch (refreshError) {
+          console.error("Unable to refresh customer outstanding after payment", refreshError);
+        }
+      }
+      const outstandingText = outstandingRupees === null
+        ? "Outstanding balance refreshed in the Payments list."
+        : `Outstanding: ₹${outstandingRupees.toFixed(2)}`;
+      setPaymentMsg(`✅ Payment of ₹${paymentForm.amount} recorded. ${outstandingText}`);
       setPaymentForm({ invoice_id: "", amount: "", mode: "CASH", ref: "" });
-      loadOutstanding();
+      await loadOutstanding();
     } catch (err: any) {
       const message = typeof err?.message === "string" ? err.message : typeof err === "string" ? err : JSON.stringify(err);
       setPaymentMsg(`❌ ${message || "Payment could not be recorded. Please retry."}`);
