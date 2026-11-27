@@ -205,14 +205,22 @@ export const AdminWorkspace: React.FC = () => {
 
   const recordPayment = async () => {
     if (!paymentForm.invoice_id || !paymentForm.amount) {
-      setPaymentMsg("Invoice ID and amount are required."); return;
+      setPaymentMsg("❌ Please select an invoice and enter a payment amount."); return;
+    }
+    const invoiceId = Number(paymentForm.invoice_id);
+    const amountRupees = Number(paymentForm.amount);
+    if (!Number.isInteger(invoiceId) || invoiceId <= 0) {
+      setPaymentMsg("❌ Please select a valid invoice from the list."); return;
+    }
+    if (!Number.isFinite(amountRupees) || amountRupees <= 0) {
+      setPaymentMsg("❌ Enter an amount greater than ₹0."); return;
     }
     try {
       const res = await apiFetch("/payments", {
         method: "POST",
         body: JSON.stringify({
-          invoice_id: parseInt(paymentForm.invoice_id),
-          amount_paise: Math.round(parseFloat(paymentForm.amount) * 100),
+          invoice_id: invoiceId,
+          amount_paise: Math.round(amountRupees * 100),
           mode: paymentForm.mode,
           reference_no: paymentForm.ref || null,
         }),
@@ -220,7 +228,7 @@ export const AdminWorkspace: React.FC = () => {
       setPaymentMsg(`✅ Payment of ₹${paymentForm.amount} recorded. Outstanding: ₹${(res.outstanding_paise / 100).toFixed(2)}`);
       setPaymentForm({ invoice_id: "", amount: "", mode: "CASH", ref: "" });
       loadOutstanding();
-    } catch (err: any) { setPaymentMsg(`❌ ${err.message}`); }
+    } catch (err: any) { setPaymentMsg(`❌ ${err?.message || String(err) || "Payment could not be recorded."}`); }
   };
 
   const runReconcile = async () => {
@@ -285,10 +293,10 @@ export const AdminWorkspace: React.FC = () => {
           {actionMessage && (
             <motion.div
               initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-              className="mb-4 p-3 rounded-lg bg-violet/20 border border-violet/40 text-sm text-offWhite flex items-center justify-between"
+              className={`mb-4 p-3 rounded-lg border text-sm font-semibold flex items-center justify-between shadow-sm ${actionMessage.startsWith("❌") ? "bg-rose-50 border-rose-300 text-rose-950" : actionMessage.startsWith("✅") || actionMessage.startsWith("🚚") || actionMessage.startsWith("🧾") ? "bg-emerald-50 border-emerald-300 text-emerald-950" : "bg-[#e8f5f0] border-[#9ccfc0] text-[#123f36]"}`}
             >
               <span>{actionMessage}</span>
-              <button onClick={() => setActionMessage(null)}><X className="w-4 h-4 text-mauve hover:text-offWhite" /></button>
+              <button onClick={() => setActionMessage(null)} aria-label="Dismiss message"><X className="w-4 h-4 opacity-70 hover:opacity-100" /></button>
             </motion.div>
           )}
         </AnimatePresence>
@@ -663,19 +671,27 @@ export const AdminWorkspace: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Record Payment */}
               <div className="glass-panel-glow p-6 space-y-4">
-                <h2 className="font-heading font-bold text-base text-offWhite">Record Payment</h2>
+                <h2 className="font-heading font-bold text-base text-[#123f36]">Record Payment</h2>
                 <div>
-                  <label className="text-xs text-mauve uppercase tracking-wider block mb-1">Invoice ID</label>
-                  <input value={paymentForm.invoice_id} onChange={e => setPaymentForm(f => ({ ...f, invoice_id: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-lg bg-charcoal/60 border border-charcoal focus:border-violet focus:outline-none text-sm text-offWhite font-body" placeholder="e.g. 1" />
+                  <label className="text-xs text-[#42645c] uppercase tracking-wider block mb-1">Invoice</label>
+                  <select value={paymentForm.invoice_id} onChange={e => setPaymentForm(f => ({ ...f, invoice_id: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-lg bg-[#e4eeeb] border border-[#789b91] focus:border-[#176b58] focus:outline-none text-sm text-[#123f36] font-body">
+                    <option value="">Select a posted invoice</option>
+                    {invoices.filter(inv => inv.status === "POSTED").map(inv => (
+                      <option key={inv.id} value={String(inv.id)}>{inv.invoice_no} · {inv.customer_name} · ₹{inv.total_amount_rupees}</option>
+                    ))}
+                  </select>
+                  {invoices.filter(inv => inv.status === "POSTED").length === 0 && (
+                    <p className="mt-1 text-xs text-[#8a4b18]">No posted invoices available. Raise an invoice before recording a payment.</p>
+                  )}
                 </div>
                 <div>
-                  <label className="text-xs text-mauve uppercase tracking-wider block mb-1">Amount (₹)</label>
+                  <label className="text-xs text-[#42645c] uppercase tracking-wider block mb-1">Amount (₹)</label>
                   <input type="number" value={paymentForm.amount} onChange={e => setPaymentForm(f => ({ ...f, amount: e.target.value }))}
                     className="w-full px-3 py-2 rounded-lg bg-charcoal/60 border border-charcoal focus:border-violet focus:outline-none text-sm text-offWhite font-body" placeholder="e.g. 4000.00" />
                 </div>
                 <div>
-                  <label className="text-xs text-mauve uppercase tracking-wider block mb-1">Payment Mode</label>
+                  <label className="text-xs text-[#42645c] uppercase tracking-wider block mb-1">Payment Mode</label>
                   <select value={paymentForm.mode} onChange={e => setPaymentForm(f => ({ ...f, mode: e.target.value }))}
                     className="w-full px-3 py-2 rounded-lg bg-charcoal/60 border border-charcoal focus:border-violet focus:outline-none text-sm text-offWhite font-body">
                     <option value="CASH">Cash</option>
@@ -686,7 +702,7 @@ export const AdminWorkspace: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs text-mauve uppercase tracking-wider block mb-1">Reference No (optional)</label>
+                  <label className="text-xs text-[#42645c] uppercase tracking-wider block mb-1">Reference No (optional)</label>
                   <input value={paymentForm.ref} onChange={e => setPaymentForm(f => ({ ...f, ref: e.target.value }))}
                     className="w-full px-3 py-2 rounded-lg bg-charcoal/60 border border-charcoal focus:border-violet focus:outline-none text-sm text-offWhite font-body" placeholder="Cheque/UTR no" />
                 </div>
@@ -695,7 +711,7 @@ export const AdminWorkspace: React.FC = () => {
                   <CreditCard className="w-4 h-4" /> Record Payment
                 </button>
                 {paymentMsg && (
-                  <div className={`p-3 rounded-lg text-xs ${paymentMsg.startsWith("✅") ? "bg-green-900/30 text-green-300 border border-green-500/30" : "bg-red-900/30 text-red-300 border border-red-500/30"}`}>
+                  <div role="status" className={`p-3 rounded-lg text-sm font-semibold ${paymentMsg.startsWith("✅") ? "bg-emerald-50 text-emerald-950 border border-emerald-300" : "bg-rose-50 text-rose-950 border border-rose-300"}`}>
                     {paymentMsg}
                   </div>
                 )}
@@ -703,9 +719,9 @@ export const AdminWorkspace: React.FC = () => {
 
               {/* Outstanding */}
               <div className="glass-panel p-5 space-y-3">
-                <h2 className="font-heading font-bold text-base text-offWhite">Customer Outstanding</h2>
+                <h2 className="font-heading font-bold text-base text-[#123f36]">Customer Outstanding</h2>
                 {outstanding.length === 0 ? (
-                  <div className="text-center py-8 text-mauve text-xs">No outstanding balances.</div>
+                  <div className="text-center py-8 text-[#42645c] text-xs">No outstanding balances.</div>
                 ) : (
                   <div className="space-y-2">
                     {outstanding.map((o, i) => (
