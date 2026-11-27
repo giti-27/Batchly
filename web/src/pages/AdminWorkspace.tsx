@@ -228,7 +228,10 @@ export const AdminWorkspace: React.FC = () => {
       setPaymentMsg(`✅ Payment of ₹${paymentForm.amount} recorded. Outstanding: ₹${(res.outstanding_paise / 100).toFixed(2)}`);
       setPaymentForm({ invoice_id: "", amount: "", mode: "CASH", ref: "" });
       loadOutstanding();
-    } catch (err: any) { setPaymentMsg(`❌ ${err?.message || String(err) || "Payment could not be recorded."}`); }
+    } catch (err: any) {
+      const message = typeof err?.message === "string" ? err.message : typeof err === "string" ? err : JSON.stringify(err);
+      setPaymentMsg(`❌ ${message || "Payment could not be recorded. Please retry."}`);
+    }
   };
 
   const runReconcile = async () => {
