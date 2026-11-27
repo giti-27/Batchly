@@ -9,7 +9,7 @@ export default {
       colors: {
         sage: "#8EF3CE",
         gold: "#8EF3CE",
-        mauve: "#6D8981",
+        mauve: "#46645C",
         violet: "#164039",
         charcoal: "#24544B",
         deepBlack: "#164039",
@@ -20,7 +20,7 @@ export default {
         body: ["Amarna", "Arial", "sans-serif"],
       },
       boxShadow: {
-        glass: "0 8px 32px 0 rgba(0, 0, 0, 0.37)",
+        glass: "0 8px 32px 0 rgba(10, 43, 37, 0.14)",
         glow: "0 0 25px rgba(142, 243, 206, 0.22)",
         goldGlow: "0 0 20px rgba(142, 243, 206, 0.24)",
       },
