@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch, setAuthToken, setCurrentUser } from "../lib/api";
-import { DimensionTorus, DimensionSphere } from "../components/VisualObjects";
 import {
   Shield, Sparkles, ArrowRight, UserCheck, Lock, User,
   CheckCircle2, AlertOctagon, X, Factory, ShoppingCart,
@@ -106,28 +105,30 @@ export const Login: React.FC = () => {
   return (
     <div className="min-h-screen bg-deepBlack text-offWhite flex items-center justify-center p-4 md:p-8 relative overflow-hidden font-body selection:bg-violet selection:text-white">
       {/* Background Dimensional Ambient Glows */}
-      <div className="absolute -top-40 -left-40 w-[32rem] h-[32rem] bg-violet/20 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute -bottom-40 -right-40 w-[32rem] h-[32rem] bg-gold/15 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute -top-40 -left-40 w-[32rem] h-[32rem] bg-sage/20 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute -bottom-40 -right-40 w-[32rem] h-[32rem] bg-sage/10 rounded-full blur-[140px] pointer-events-none" />
 
-      {/* 3D Dimensional Background Elements */}
-      <div className="hidden lg:block absolute top-10 right-16 opacity-75 pointer-events-none transform hover:scale-105 transition-transform duration-700">
-        <DimensionTorus size={230} glowColor="#8050ED" />
+      {/* Quiet mint ripple details: slow, soft and intentionally unobtrusive. */}
+      <div aria-hidden="true" className="absolute -top-20 right-[8%] hidden md:block">
+        <span className="login-ripple" style={{ "--ripple-size": "19rem" } as React.CSSProperties} />
+        <span className="login-ripple login-ripple-delay" style={{ "--ripple-size": "19rem" } as React.CSSProperties} />
       </div>
-      <div className="hidden lg:block absolute bottom-10 left-16 opacity-65 pointer-events-none transform hover:scale-105 transition-transform duration-700">
-        <DimensionSphere size={170} />
+      <div aria-hidden="true" className="absolute -bottom-24 left-[5%] hidden md:block">
+        <span className="login-ripple" style={{ "--ripple-size": "15rem" } as React.CSSProperties} />
+        <span className="login-ripple login-ripple-delay" style={{ "--ripple-size": "15rem" } as React.CSSProperties} />
       </div>
 
       <div className="w-full max-w-xl z-10 space-y-6">
         {/* Main Glassmorphic Card */}
-        <div className="glass-panel-glow p-6 sm:p-10 relative backdrop-blur-xl border border-violet/30 shadow-2xl">
+        <div className="glass-panel-glow p-6 sm:p-10 relative backdrop-blur-xl border border-sage/80 shadow-2xl">
           {/* Logo & Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex w-16 h-16 rounded-2xl bg-gradient-to-tr from-violet via-gold to-violet p-[2px] mb-4 shadow-glow">
+            <div className="inline-flex w-16 h-16 rounded-2xl bg-sage p-[2px] mb-4 shadow-glow">
               <div className="w-full h-full bg-deepBlack rounded-[14px] flex items-center justify-center">
-                <span className="font-heading font-black text-3xl text-gold">B</span>
+                <span className="font-heading font-normal text-3xl text-sage">B</span>
               </div>
             </div>
-            <h1 className="font-heading text-3xl sm:text-4xl font-extrabold tracking-widest text-offWhite uppercase">
+            <h1 className="font-heading text-3xl sm:text-4xl font-extrabold tracking-widest text-deepBlack uppercase">
               BATCHLY
             </h1>
             <p className="text-xs sm:text-sm text-mauve mt-2 tracking-wide font-body">
@@ -174,7 +175,7 @@ export const Login: React.FC = () => {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="e.g. admin or salesman_a"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-charcoal/60 border border-charcoal/90 focus:border-violet focus:ring-1 focus:ring-violet focus:outline-none text-offWhite font-body text-sm transition placeholder:text-mauve/50"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-offWhite border border-sage/70 focus:border-violet focus:ring-1 focus:ring-sage focus:outline-none text-deepBlack font-body text-sm transition placeholder:text-mauve/80"
                   required
                 />
               </div>
@@ -209,7 +210,7 @@ export const Login: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 py-3.5 rounded-xl bg-gradient-to-r from-violet via-violet to-violet/80 hover:from-violet/90 hover:to-violet text-white font-heading font-semibold text-sm tracking-wider flex items-center justify-center space-x-2 shadow-glow hover:shadow-glow/80 active:scale-[0.99] transition duration-200 disabled:opacity-50"
+              className="w-full mt-2 py-3.5 rounded-xl bg-sage hover:bg-[#7BE7BD] text-deepBlack font-heading font-semibold text-sm tracking-wider flex items-center justify-center space-x-2 shadow-glow hover:shadow-glow/80 active:scale-[0.99] transition duration-200 disabled:opacity-50"
             >
               <span>{loading ? "Authenticating Persona..." : "Enter Operations Platform"}</span>
               <ArrowRight className="w-4 h-4" />
@@ -217,7 +218,7 @@ export const Login: React.FC = () => {
           </form>
 
           {/* Quick Test Persona Selector */}
-          <div className="mt-8 pt-6 border-t border-charcoal/60">
+          <div className="mt-8 pt-6 border-t border-sage/60">
             <div className="text-[11px] uppercase tracking-wider text-mauve text-center mb-3 flex items-center justify-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-gold" />
               <span>Selectable Demo Personas (Pass: demo123)</span>
@@ -241,17 +242,17 @@ export const Login: React.FC = () => {
                     }}
                     className={`p-3 rounded-xl cursor-pointer border transition flex items-start gap-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-gold ${
                       isSelected
-                        ? "bg-violet/15 border-violet shadow-glow"
-                        : "bg-charcoal/30 border-charcoal/60 hover:bg-charcoal/60 hover:border-mauve/40"
+                        ? "bg-sage/35 border-violet shadow-glow"
+                        : "bg-offWhite border-sage/50 hover:bg-sage/15 hover:border-violet/40"
                     }`}
                   >
                     <div className="mt-0.5">{p.icon}</div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="font-heading font-bold text-offWhite truncate text-xs">
+                        <span className="font-heading font-bold text-deepBlack truncate text-xs">
                           {p.name}
                         </span>
-                        <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-charcoal/80 text-gold font-mono">
+                        <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-sage/30 text-deepBlack font-mono">
                           {p.role}
                         </span>
                       </div>
