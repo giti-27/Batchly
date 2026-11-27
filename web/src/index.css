@@ -92,6 +92,8 @@ button:not(:disabled) {
   color: #B8D2C9;
 }
 
+.min-h-screen.bg-deepBlack main .glass-panel .text-mauve,
+.min-h-screen.bg-deepBlack main .glass-panel label.text-mauve,
 .glass-panel .text-mauve,
 .glass-panel-glow .text-mauve,
 .bg-white .text-mauve,
