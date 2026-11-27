@@ -49,7 +49,7 @@ export const ProductionWorkspace: React.FC = () => {
         apiFetch("/stock/summary").catch(() => []),
         apiFetch("/suppliers").catch((err: any) => {
           setSupplierLoadError(err?.message || "Could not load suppliers. Please refresh and try again.");
-          return [];
+          return null;
         }),
       ]);
       setRuns(rList || []);
@@ -61,7 +61,7 @@ export const ProductionWorkspace: React.FC = () => {
         if (!selectedSupplierId || !supList.some((supplier: any) => supplier.id === selectedSupplierId)) {
           setSelectedSupplierId(supList[0].id);
         }
-      } else if (!supplierLoadError) {
+      } else if (supList && supList.length === 0) {
         setSupplierLoadError("No active suppliers were returned. Check the supplier records in Admin → Suppliers.");
       }
       if (pList && pList.length > 0 && !selectedProductId) {
