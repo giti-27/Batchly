@@ -4,7 +4,7 @@
   /* Batchly forest + mint palette sampled from the supplied references. */
   --color-sage: #8EF3CE;
   --color-gold: #8EF3CE;
-  --color-mauve: #6D8981;
+  --color-mauve: #46645C;
   --color-violet: #164039;
   --color-charcoal: #24544B;
   --color-deep-black: #164039;
@@ -28,7 +28,7 @@
   --batchly-paper: #F3F4F1;
   --batchly-white: #FFFFFF;
   --batchly-ink: #153A33;
-  --batchly-muted: #6D8981;
+  --batchly-muted: #46645C;
 }
 
 @layer base {
@@ -79,6 +79,44 @@
 button:not(:disabled) {
   transition: background-color 160ms ease, border-color 160ms ease,
     box-shadow 160ms ease, color 160ms ease, transform 120ms ease;
+}
+
+/* Readable text on pale panels: keep mint as a brand accent, not tiny body copy. */
+@layer utilities {
+  .glass-panel .text-mauve,
+  .glass-panel-glow .text-mauve,
+  .bg-white .text-mauve,
+  .bg-offWhite .text-mauve {
+    color: #46645C;
+  }
+
+  .glass-panel .text-sage,
+  .glass-panel .text-gold,
+  .glass-panel-glow .text-sage,
+  .glass-panel-glow .text-gold,
+  .bg-white .text-sage,
+  .bg-white .text-gold,
+  .bg-offWhite .text-sage,
+  .bg-offWhite .text-gold {
+    color: #17634F;
+  }
+
+  .glass-panel .text-offWhite,
+  .glass-panel-glow .text-offWhite,
+  .bg-white .text-offWhite,
+  .bg-offWhite .text-offWhite {
+    color: #153A33;
+  }
+
+  /* Tables and tinted stock tiles also need readable foregrounds. */
+  .glass-panel thead,
+  .glass-panel th,
+  .glass-panel td,
+  .glass-panel-glow thead,
+  .glass-panel-glow th,
+  .glass-panel-glow td {
+    color: #31564E;
+  }
 }
 
 /* Gentle expanding rings replace the old continuously rotating 3D ornaments. */
