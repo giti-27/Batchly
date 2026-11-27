@@ -1,5 +1,5 @@
 import os
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlalchemy.orm import Session
 from api.app.db import get_db
 from api.app.config import settings
@@ -15,17 +15,37 @@ from api.app.services.sales_service import get_customer_outstanding
 router = APIRouter(prefix="/benchmark", tags=["Benchmark"])
 
 @router.post("/reset")
-def reset_benchmark_endpoint(user: User = Depends(require_role(["ADMIN"]))):
-    # seed_benchmark(reset=True) drops EVERY application table. Keep this
-    # destructive helper local-only; never expose it on the hosted deployment.
-    if os.getenv("VERCEL") == "1" or not settings.DATABASE_URL.lower().startswith("sqlite"):
+def reset_benchmark_endpoint(
+    confirmation: str = Body(..., embed=True),
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role(["ADMIN"]))
+):
+    """
+    Rebuilds the synthetic demo database from the benchmark opening-stock seed.
+    This deletes ALL current application records, including users and transactions.
+    It is disabled by default and requires both an environment flag and exact phrase.
+    """
+    if not settings.DEMO_RESET_ENABLED:
         raise HTTPException(
             status_code=403,
-            detail="Benchmark reset is disabled on hosted/shared databases. Use a disposable local SQLite database only."
+            detail="Demo reset is disabled. Enable DEMO_RESET_ENABLED only for an intentional demo reset."
+        )
+    if confirmation != "RESET BATCHLY DEMO DATA":
+        raise HTTPException(
+            status_code=400,
+            detail='Confirmation must exactly equal "RESET BATCHLY DEMO DATA".'
         )
     try:
+        # Authentication has already been checked. Release its read transaction
+        # before dropping tables, otherwise PostgreSQL can wait on our own lock.
+        db.rollback()
+        db.close()
         seed_benchmark(reset=True, execute_steps=False)
-        return {"status": "SUCCESS", "message": "Benchmark database reset and re-seeded with opening stock."}
+        return {
+            "status": "SUCCESS",
+            "message": "Demo data reset. Opening inventory and demo accounts have been recreated; prior transactions were deleted.",
+            "warning": "Disable DEMO_RESET_ENABLED immediately after this one-time reset."
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

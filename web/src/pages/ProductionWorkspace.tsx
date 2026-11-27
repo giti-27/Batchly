@@ -155,41 +155,50 @@ export const ProductionWorkspace: React.FC = () => {
     }
   };
 
-  const handleGoodsReceipt = async () => {
-    if (!selectedSupplierId) return;
-    try {
-      const poNo = `PO-${Date.now().toString().slice(-6)}`;
-      const invNo = `INV-${Date.now().toString().slice(-6)}`;
-      const batchNo = `RM-REC-${Date.now().toString().slice(-4)}`;
-      // The receipt form accepts display units (kg, L, or pcs), while inventory
-      // stores flour/oil/spice in grams or millilitres.
-      const usesThousandBaseUnits = [1, 2, 3].includes(receiptItemId);
-      const unitFactor = usesThousandBaseUnits ? 1000 : 1;
-      const qtyBase = parseFloat(receiptQty) * unitFactor;
-      // Convert ₹ per display unit to paise per base unit.
-      const ratePaise = Math.round((parseFloat(receiptRate) * 100) / unitFactor);
+  const selectedReceiptItem = stockSummary.find((item) => item.item_id === receiptItemId);
+  const receiptDisplayUnit = selectedReceiptItem?.display_uom || "kg";
+  const receiptUnitFactor = ["kg", "l"].includes(receiptDisplayUnit.toLowerCase()) ? 1000 : 1;
 
-      await apiFetch("/purchases", {
+  const handleGoodsReceipt = async () => {
+    if (!selectedSupplierId) {
+      alert("Please select a supplier.");
+      return;
+    }
+    const displayQty = Number(receiptQty);
+    const displayRate = Number(receiptRate);
+    if (!Number.isFinite(displayQty) || displayQty <= 0 || !Number.isFinite(displayRate) || displayRate < 0) {
+      alert("Enter a valid positive quantity and a non-negative rate.");
+      return;
+    }
+    try {
+      const purchaseNo = `PUR-REC-${Date.now().toString().slice(-8)}`;
+      const lotNo = `RM-REC-${Date.now().toString().slice(-6)}`;
+      // Convert the user-facing kg/L/pcs entry to the backend's canonical
+      // base quantity (g/ml/pcs), and ₹ per display unit to paise per base unit.
+      const qtyBase = Number((displayQty * receiptUnitFactor).toFixed(3));
+      const ratePaisePerBase = Number(((displayRate * 100) / receiptUnitFactor).toFixed(6));
+
+      // Purchases are deliberately two-step: create a draft, then post it.
+      // Posting creates the batch, ledger movement, and updates the stock balance.
+      const purchase = await apiFetch("/purchases", {
         method: "POST",
         body: JSON.stringify({
           supplier_id: selectedSupplierId,
-          po_no: poNo,
-          invoice_no: invNo,
-          items: [
-            {
-              item_id: receiptItemId,
-              batch_no: batchNo,
-              qty_base: qtyBase,
-              rate_paise_base: ratePaise,
-              expiry_days: 90,
-            },
-          ],
+          purchase_no: purchaseNo,
+          date: new Date().toISOString().slice(0, 10),
+          lines: [{
+            item_id: receiptItemId,
+            qty: qtyBase,
+            rate_paise_per_base: ratePaisePerBase,
+            supplier_lot_no: lotNo,
+          }],
         }),
       });
-      setMsg(`📦 Goods receipt posted: ${receiptQty} units received from supplier.`);
-      loadData();
+      await apiFetch(`/purchases/${purchase.id}/post`, { method: "POST" });
+      setMsg(`Goods receipt posted: ${displayQty} ${receiptDisplayUnit} of ${selectedReceiptItem?.item_name || "material"} received.`);
+      await loadData();
     } catch (err: any) {
-      alert(err.message);
+      alert(err.message || "Unable to post goods receipt.");
     }
   };
 
@@ -435,7 +444,7 @@ export const ProductionWorkspace: React.FC = () => {
                   </div>
                   <h4 className="font-heading font-semibold text-base text-offWhite">{s.item_name}</h4>
                   <div className="text-2xl font-heading font-bold text-gold">
-                    {s.qty_base}
+                    {Number(s.qty_display ?? s.qty_base).toLocaleString("en-IN", { maximumFractionDigits: 3 })}
                   </div>
                 </div>
               ))}
@@ -479,18 +488,20 @@ export const ProductionWorkspace: React.FC = () => {
                   }}
                   className="w-full px-4 py-2.5 rounded-lg bg-charcoal/60 border border-charcoal text-offWhite font-body text-sm"
                 >
-                  <option value={1} className="bg-deepBlack">Murukku Flour (kg)</option>
-                  <option value={2} className="bg-deepBlack">Cooking Oil (L)</option>
-                  <option value={3} className="bg-deepBlack">Spice Blend (kg)</option>
-                  <option value={4} className="bg-deepBlack">Printed Pouches (pcs)</option>
-                  <option value={5} className="bg-deepBlack">Outer Cartons (pcs)</option>
+                  {stockSummary.filter((item) => item.type === "RAW" || item.type === "PACK").map((item) => (
+                    <option key={item.item_id} value={item.item_id} className="bg-deepBlack">
+                      {item.item_name} ({item.display_uom})
+                    </option>
+                  ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs uppercase tracking-wider text-mauve mb-1">Quantity (kg / L / pcs)</label>
+                <label className="block text-xs uppercase tracking-wider text-mauve mb-1">{`Quantity (${receiptDisplayUnit})`}</label>
                 <input
                   type="number"
+                  min="0.001"
+                  step="0.001"
                   value={receiptQty}
                   onChange={(e) => setReceiptQty(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-lg bg-charcoal/60 border border-charcoal text-offWhite font-body text-sm"
@@ -498,7 +509,7 @@ export const ProductionWorkspace: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs uppercase tracking-wider text-mauve mb-1">Rate per display unit (₹)</label>
+                <label className="block text-xs uppercase tracking-wider text-mauve mb-1">{`Rate per ${receiptDisplayUnit} (₹)`}</label>
                 <input
                   type="number"
                   step="0.1"

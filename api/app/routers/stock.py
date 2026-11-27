@@ -6,6 +6,7 @@ from api.app.db import get_db
 from api.app.models.entities import StockBalance, BatchBalance, StockLedger, Item, User
 from api.app.services.auth_service import require_role
 from api.app.services.ledger_service import post_movement, reconcile_balances
+from api.app.services.uom import from_base
 
 router = APIRouter(prefix="/stock", tags=["Stock"])
 
@@ -20,9 +21,14 @@ def get_stock_summary(db: Session = Depends(get_db), user: User = Depends(requir
             "item_name": item.name,
             "type": item.type,
             "display_uom": item.display_uom,
-            "qty_base": float(b.qty),
+            "qty_base": float(b.qty),  # canonical internal quantity (g, ml, pcs, packet)
             "reserved_qty": float(b.reserved_qty),
             "available_qty": float(b.qty - b.reserved_qty),
+            # Human-facing quantities use the item's configured display unit.
+            "qty_display": float(from_base(b.qty, item.display_uom)),
+            "reserved_qty_display": float(from_base(b.reserved_qty, item.display_uom)),
+            "available_qty_display": float(from_base(b.qty - b.reserved_qty, item.display_uom)),
+            "base_uom": item.base_uom,
             "moving_avg_cost_paise": float(item.moving_avg_cost_paise)
         })
     return results

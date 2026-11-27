@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { apiFetch } from "../lib/api";
+import { apiFetch, getCurrentUserRole } from "../lib/api";
 import { Navbar } from "../components/Navbar";
 import { CheckCircle2, XCircle, Play, RefreshCw, ShieldCheck } from "lucide-react";
 
@@ -24,8 +24,10 @@ interface BenchmarkResponse {
 }
 
 export const Benchmark: React.FC = () => {
+  const canResetDemo = getCurrentUserRole() === "ADMIN";
   const [data, setData] = useState<BenchmarkResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,6 +42,32 @@ export const Benchmark: React.FC = () => {
       setError(err.message || "Failed to execute benchmark");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const resetDemoData = async () => {
+    const phrase = window.prompt(
+      'WARNING: This permanently deletes all current demo records and recreates the original opening stock, demo accounts, and master data.\n\nTo continue, type exactly: RESET BATCHLY DEMO DATA'
+    );
+    if (phrase === null) return;
+    if (phrase !== "RESET BATCHLY DEMO DATA") {
+      setError("Reset cancelled: confirmation phrase did not match.");
+      return;
+    }
+    setResetting(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const result = await apiFetch<{ message: string }>("/benchmark/reset", {
+        method: "POST",
+        body: JSON.stringify({ confirmation: phrase }),
+      });
+      setData(null);
+      setMessage(result.message + " Please sign in again with the demo credentials if your session expires.");
+    } catch (err: any) {
+      setError(err.message || "Unable to reset demo data. Check that DEMO_RESET_ENABLED is enabled.");
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -71,15 +99,26 @@ export const Benchmark: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 flex-wrap">
             <button
               onClick={runBenchmark}
-              disabled={loading}
+              disabled={loading || resetting}
               className="flex items-center space-x-2 px-5 py-2 rounded-lg bg-violet hover:bg-violet/90 text-white shadow-glow transition text-xs font-semibold"
             >
               {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
               <span>{loading ? "Running..." : "Run Benchmark"}</span>
             </button>
+            {canResetDemo && (
+            <button
+              onClick={resetDemoData}
+              disabled={loading || resetting}
+              className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-red-900/40 hover:bg-red-900/70 text-red-100 border border-red-400/50 transition text-xs font-semibold"
+              title="Destructively reset the synthetic demo database to its opening state"
+            >
+              {resetting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              <span>{resetting ? "Resetting..." : "Reset Demo Data"}</span>
+            </button>
+            )}
           </div>
         </div>
 

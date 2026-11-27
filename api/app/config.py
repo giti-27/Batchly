@@ -55,6 +55,9 @@ class Settings(BaseSettings):
 
     DEV_AUTH_BYPASS: bool = False
 
+    # Destructive reset is disabled unless explicitly enabled for a demo database.
+    DEMO_RESET_ENABLED: bool = False
+
     # URLs and Networking
     PORT: int = 8000
     HOST: str = "0.0.0.0"
