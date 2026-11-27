@@ -17,6 +17,7 @@ router = APIRouter(prefix="/benchmark", tags=["Benchmark"])
 @router.post("/reset")
 def reset_benchmark_endpoint(
     confirmation: str = Body(..., embed=True),
+    db: Session = Depends(get_db),
     user: User = Depends(require_role(["ADMIN"]))
 ):
     """
@@ -35,6 +36,10 @@ def reset_benchmark_endpoint(
             detail='Confirmation must exactly equal "RESET BATCHLY DEMO DATA".'
         )
     try:
+        # Authentication has already been checked. Release its read transaction
+        # before dropping tables, otherwise PostgreSQL can wait on our own lock.
+        db.rollback()
+        db.close()
         seed_benchmark(reset=True, execute_steps=False)
         return {
             "status": "SUCCESS",
