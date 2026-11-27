@@ -1,23 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
-  <defs>
-    <linearGradient id="violetGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#8050ED" />
-      <stop offset="50%" stop-color="#A855F7" />
-      <stop offset="100%" stop-color="#E7CA65" />
-    </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="16" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-    </filter>
-  </defs>
-  
-  <rect width="512" height="512" rx="128" fill="#080808" />
-  <rect x="16" y="16" width="480" height="480" rx="112" fill="none" stroke="url(#violetGradient)" stroke-width="12" filter="url(#glow)" />
-  
-  <g transform="translate(136, 106)">
-    <rect x="0" y="0" width="56" height="300" rx="28" fill="#E7CA65" />
-    <path d="M 40 0 L 140 0 C 195 0 240 35 240 85 C 240 135 195 160 140 160 L 40 160 Z" fill="none" stroke="#E7CA65" stroke-width="48" stroke-linejoin="round" />
-    <path d="M 40 145 L 150 145 C 210 145 255 180 255 230 C 255 285 205 300 145 300 L 40 300 Z" fill="none" stroke="#8050ED" stroke-width="48" stroke-linejoin="round" filter="url(#glow)" />
-    <circle cx="140" cy="150" r="14" fill="#BFCFC1" />
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="15" fill="#164039"/>
+  <rect x="4" y="4" width="56" height="56" rx="12" fill="none" stroke="#8EF3CE" stroke-width="2.5"/>
+  <rect x="12" y="10" width="5" height="44" rx="2.5" fill="#8EF3CE"/>
+  <path d="M16 12h19c9 0 14 4.5 14 11 0 5-3 8-7 9.5 5.5 1.4 9 5.2 9 11 0 7-5.7 10.5-15 10.5H16V12zm9 7v10h9c4 0 6-1.7 6-5s-2-5-6-5h-9zm0 17v11h11c4.5 0 7-1.8 7-5.5S40.5 36 36 36H25z" fill="#F3F4F1"/>
+  <circle cx="49" cy="14" r="3" fill="#8EF3CE"/>
 </svg>
