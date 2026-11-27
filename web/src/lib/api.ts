@@ -101,12 +101,28 @@ export async function apiFetch<T = any>(
 
         try {
           const parsed = JSON.parse(errorText);
-          detail = parsed.detail || parsed.message || detail;
+          const rawDetail = parsed?.detail ?? parsed?.message ?? parsed?.error;
+          if (typeof rawDetail === "string") {
+            detail = rawDetail;
+          } else if (Array.isArray(rawDetail)) {
+            // FastAPI/Pydantic validation errors are arrays of objects.
+            // Convert them into readable messages instead of "[object Object]".
+            detail = rawDetail.map((item: any) => {
+              if (typeof item === "string") return item;
+              const location = Array.isArray(item?.loc) ? item.loc.filter((part: unknown) => part !== "body").join(" → ") : "";
+              const message = item?.msg || item?.message || JSON.stringify(item);
+              return location ? `${location}: ${message}` : message;
+            }).join("; ");
+          } else if (rawDetail && typeof rawDetail === "object") {
+            detail = rawDetail.message || rawDetail.msg || JSON.stringify(rawDetail);
+          } else {
+            detail = errorText || detail;
+          }
         } catch {
           detail = errorText || detail;
         }
 
-        throw new Error(detail);
+        throw new Error(String(detail));
       }
 
       return await res.json();
