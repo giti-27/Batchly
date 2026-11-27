@@ -170,3 +170,49 @@ header.glass-panel .text-mauve {
 @media (prefers-reduced-motion: reduce) {
   .login-ripple { animation: none; opacity: 0.16; }
 }
+
+
+/* FINAL CONTRAST GUARDRAILS
+   Apply colours according to the surface, with enough specificity to beat
+   component utility classes. Dark workspace headings are pale; card content
+   is dark. The logo monogram is intentionally mint on its forest tile. */
+.min-h-screen.bg-deepBlack {
+  color: #F3F4F1;
+}
+.min-h-screen.bg-deepBlack main {
+  color: #F3F4F1;
+}
+.min-h-screen.bg-deepBlack main h1,
+.min-h-screen.bg-deepBlack main h2,
+.min-h-screen.bg-deepBlack main h3,
+.min-h-screen.bg-deepBlack main h4 {
+  color: #B8D2C9;
+}
+.min-h-screen.bg-deepBlack main .glass-panel,
+.min-h-screen.bg-deepBlack main .glass-panel-glow {
+  color: #153A33;
+}
+.min-h-screen.bg-deepBlack main .glass-panel h1,
+.min-h-screen.bg-deepBlack main .glass-panel h2,
+.min-h-screen.bg-deepBlack main .glass-panel h3,
+.min-h-screen.bg-deepBlack main .glass-panel h4 {
+  color: #153A33;
+}
+.min-h-screen.bg-deepBlack main .glass-panel .text-offWhite,
+.min-h-screen.bg-deepBlack main .glass-panel .text-deepBlack {
+  color: #153A33;
+}
+.min-h-screen.bg-deepBlack main .glass-panel .text-mauve {
+  color: #46645C;
+}
+.min-h-screen.bg-deepBlack main .glass-panel .text-sage,
+.min-h-screen.bg-deepBlack main .glass-panel .text-gold {
+  color: #17634F;
+}
+/* Logo B: keep the mint monogram bright on its dark green tile. */
+.glass-panel-glow .bg-deepBlack .text-sage {
+  color: #8EF3CE;
+}
+header.glass-panel .bg-deepBlack .text-gold {
+  color: #8EF3CE;
+}
